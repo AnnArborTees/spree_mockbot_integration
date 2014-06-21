@@ -13,7 +13,7 @@ feature 'MockbotIdeas' do
       it 'it lists all ideas' do
         click_link 'Configuration'
         click_link 'MockBot Ideas'
-        expect(page).to have_css('')
+        #expect(page).to have_css('')
       end
     end
   end

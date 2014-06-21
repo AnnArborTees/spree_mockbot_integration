@@ -4,5 +4,6 @@
 en:
   spree:
     mockbot_ideas: "MockBot Ideas"
+    mockbot_status: "MockBot Status"
     listing_ideas: "Listing Ideas from MockBot"
     no_ideas_found: "No ideas found"

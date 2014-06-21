@@ -1,2 +1,6 @@
 require 'spree_core'
 require 'spree_mockbot_integration/engine'
+require 'figaro'
+require 'active_resource'
+require 'active_resource/paginated_collection'
+require 'active_resource_response'
