@@ -11,4 +11,12 @@ class Spree::Admin::MockbotIdeasController < Spree::Admin::BaseController
     )
   end
 
+  def show
+    @idea = Mockbot::Idea.find(params[:id])
+  end
+
+  def publish
+    @idea = Mockbot::Idea.find(params[:id])
+  end
+
 end

@@ -10,4 +10,13 @@ module Spree::Admin::MockbotIdeasHelper
     }.join(',').html_safe
   end
 
+  def import_idea_to_product_link(idea)
+    if idea.status == 'Ready to Publish'
+      'Publish'
+    elsif idea.status == 'Published'
+      'Republish'
+    end
+  end
+
+
 end
