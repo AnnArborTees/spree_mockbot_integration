@@ -1,5 +1,7 @@
 Spree::Core::Engine.routes.draw do
   namespace :admin do
-    resources :mockbot_ideas
+    namespace :mockbot do
+      resources :ideas
+    end
   end
 end

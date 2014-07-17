@@ -36,6 +36,8 @@ require 'spree_mockbot_integration/factories'
 RSpec.configure do |config|
   config.include FactoryGirl::Syntax::Methods
 
+  config.infer_spec_type_from_file_location!
+
   # == URL Helpers
   #
   # Allows access to Spree's routes in specs:
@@ -43,6 +45,8 @@ RSpec.configure do |config|
   # visit spree.admin_path
   # current_path.should eql(spree.products_path)
   config.include Spree::TestingSupport::UrlHelpers
+  config.include Spree::TestingSupport::ControllerRequests
+  config.include Devise::TestHelpers, type: :controller
 
   # == Mock Framework
   #
@@ -67,7 +71,7 @@ RSpec.configure do |config|
     DatabaseCleaner.strategy = :transaction
     DatabaseCleaner.clean_with :truncation
 
-    Endpoint::Stub.create_for Mockbot::Idea
+    Endpoint::Stub.create_for Spree::Mockbot::Idea
   end
 
   # Before each spec check if it is a Javascript test and switch between using database transactions or not where necessary.
