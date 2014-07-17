@@ -18,6 +18,7 @@ require File.expand_path('../dummy/config/environment.rb',  __FILE__)
 require 'rspec/rails'
 require 'database_cleaner'
 require 'ffaker'
+require 'endpoint_stub'
 
 # Requires supporting ruby files with custom matchers and macros, etc,
 # in spec/support/ and its subdirectories.
@@ -65,10 +66,12 @@ RSpec.configure do |config|
   config.before :suite do
     DatabaseCleaner.strategy = :transaction
     DatabaseCleaner.clean_with :truncation
+
+    Endpoint::Stub.create_for Mockbot::Idea
   end
 
   # Before each spec check if it is a Javascript test and switch between using database transactions or not where necessary.
-  config.before :each do
+  config.before :each do |example|
     DatabaseCleaner.strategy = example.metadata[:js] ? :truncation : :transaction
     DatabaseCleaner.start
   end
@@ -76,6 +79,7 @@ RSpec.configure do |config|
   # After each spec clean the database.
   config.after :each do
     DatabaseCleaner.clean
+    Endpoint::Stub.clear_all_records!
   end
 
   config.fail_fast = ENV['FAIL_FAST'] || false

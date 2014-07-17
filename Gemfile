@@ -9,4 +9,7 @@ gem 'spree_core', github: 'spree/spree', branch: branch
 gem 'spree_frontend', github: 'spree/spree', branch: branch
 gem 'spree_auth_devise', github: 'spree/spree_auth_devise', branch: branch
 
+gem 'webmock'
+gem 'endpoint_stub', github: 'Resonious/endpoint_stub', branch: 'develop'
+
 gemspec

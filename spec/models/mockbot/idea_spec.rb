@@ -1,23 +1,21 @@
 require 'spec_helper'
 
-describe Mockbot::Idea, '.all' do
-  context 'there are no ideas' do
-    it "returns an empty array" do
-      ActiveResource::HttpMock.respond_to do |mock|
-        mock.get 'api/ideas.json', {'Accept' => 'application/json'}, []
+describe Mockbot::Idea do
+  describe '.all' do
+    context 'there are 2 ideas' do
+      before :each do
+        2.times { create(:idea) }
       end
 
-      Mockbot::Idea.all.should be_empty
+      it "returns all ideas" do
+        expect(Mockbot::Idea.all.size).to eq 2
+      end
     end
-  end
-
-  context 'there are 2 ideas' do
-    it "returns all ideas" do
-      ActiveResource::HttpMock.respond_to do |mock|
-        mock.get 'api/ideas.json', {'Accept' => 'application/json'}, []
+    
+    context 'there are no ideas' do
+      it "returns an empty array" do
+        expect(Mockbot::Idea.all.size).to eq 0
       end
-
-      Mockbot::Idea.all.size.should == 2
     end
   end
 end
