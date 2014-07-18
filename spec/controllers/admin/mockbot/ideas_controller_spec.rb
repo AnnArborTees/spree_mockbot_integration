@@ -12,6 +12,5 @@ describe Spree::Admin::Mockbot::IdeasController do
       spree_get :index
       expect(assigns(:ideas).map(&:working_name)).to eq [idea0, idea1, idea2].map(&:working_name)
     end
-    it 'paginates ideas'
   end
 end

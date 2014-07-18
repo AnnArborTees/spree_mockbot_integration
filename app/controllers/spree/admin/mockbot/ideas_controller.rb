@@ -3,7 +3,7 @@ module Spree
     module Mockbot
       class IdeasController < BaseController
         def index
-          params[:page] = 1 unless !params[:page].nil?
+          params[:page] = 1 if params[:page].nil?
           ideas = Spree::Mockbot::Idea.all(params: { page: params[:page], per_page: params[:per_page]})
           @ideas = Kaminari::PaginatableArray.new( ideas,{
               :limit => ideas.http_response['Pagination-Limit'].to_i,
@@ -14,6 +14,7 @@ module Spree
         end
 
         def show
+          puts params
           @idea = Spree::Mockbot::Idea.find(params[:id])
         end
 

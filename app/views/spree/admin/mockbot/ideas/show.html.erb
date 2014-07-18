@@ -1,0 +1,23 @@
+<% content_for :page_title do %>
+    <%= @idea.working_name %>
+<% end %>
+
+<div class='row'>
+  <div class='col-sm-5'>
+    <h2>Basic Idea Specs</h2>
+    <p>
+                                                      <!-- TODO this is shitty and I don't know how to fix -->
+      <%= label :sku, "Product SKU" %> <%= link_to @idea.sku, "/admin/mockbot/ideas/#{@idea.id}" %>
+    </p>
+    <p>
+      <%= label :working_name, "Working Name" %> <%= @idea.working_name %>
+    </p>
+    <p>
+      <%= label :working_description, "Working Description" %> <%= @idea.working_description %>
+    </p>
+
+    <p>
+      <%= label :priority, 'Priority Level' %> <%= "<@idea.priority>?" %>
+    </p>
+  </div>
+</div>
