@@ -74,7 +74,7 @@ RSpec.configure do |config|
     # We also activate endpoint stub, and make the index response emulate pagination.
     EndpointStub.activate!
     idea_stub = Endpoint::Stub.create_for Spree::Mockbot::Idea
-    EndpointActions.paginated_index idea_stub
+    EndpointActions.mock_for_ideas idea_stub
   end
 
   # Before each spec check if it is a Javascript test and switch between using database transactions or not where necessary.

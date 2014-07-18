@@ -7,7 +7,7 @@ module Spree
       # headers['X-User-Email'] = Figaro.env['user_email']
       # headers['X-User-Token'] = Figaro.env['user_token']
 
-      self.site = 'http://test.com:2999/api'#Figaro.env['api_endpoint']
+      self.site = Figaro.env['api_endpoint']
     end
   end
 end

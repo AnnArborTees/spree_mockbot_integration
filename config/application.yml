@@ -1,5 +1,4 @@
-#development:
-#  mockbot_home: 'http://mockbot.softwearcrm.com.dev'
-#  api_endpoint: 'http://mockbot.softwearcrm.com.dev/api'
-#  user_email: 'ricky@annarbortees.com'
-#  user_token: '1u88xt29AVTQG1U5mLTP'
+mockbot_home: 'http://test.com:2999'
+api_endpoint: 'http://test.com:2999/api'
+user_email: 'admin@softwearcrm.com'
+user_token: '1u88xt29AVTQG1U5mLTP'
