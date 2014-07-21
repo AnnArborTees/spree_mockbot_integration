@@ -2,45 +2,55 @@
     <%= Spree.t(:listing_ideas) %>
 <% end %>
 
-<%= render :partial => 'spree/admin/shared/ideas_sub_menu' %>
-<%= render partial: 'spree/admin/shared/idea_search' %>
+<div class="row">
+  <%= render partial: 'spree/admin/shared/ideas_sub_menu' %>
+  <div class="alpha six columns">
+    <%= render partial: 'spree/admin/shared/idea_search' %>
+  </div>
+  <div class="alpha six columns">
+    <%= button_to "Settings", admin_mockbot_settings_url, class: 'btn btn-default', method: :get %>
+  </div>
+</div>
 
-<%= paginate @ideas %>
-
-<% if @ideas.any? %>
-    <table class="index" id="listing_ideas">
-      <colgroup>
-        <col style="width: 15%;">
-        <col style="width: 48%;">
-        <col style="width: 10%;">
-        <col style="width: 10%;">
-        <col style="width: 17%;">
-      </colgroup>
-      <thead>
-      <tr data-hook="admin_ideas_index_headers">
-        <th><%= Spree.t(:sku) %></th>
-        <th><%= Spree.t(:mockbot_status) %></th>
-        <th>Spree Matches</th>
-        <th></th>
-        <th data-hook="admin_ideas_index_header_actions" class="actions">Publish</th>
-      </tr>
-      </thead>
-      <tbody>
-      <% @ideas.each do |idea| %>
-          <tr data-hook="admin_ideas_index_rows" class="<%= cycle('odd', 'even') %>">
-            <td class="align-center"><%=  link_to idea.sku, mockbot_idea_remote_url(idea), target: '_blank' rescue 'Error retrieving sku' %></td>
-            <td class="align-center"><%= idea.status rescue 'Unknown status' %></td>
-            <td><%= links_to_product_from_idea idea %></td>
-            <td class="align-center"></td>
-            <td class="actions" data-hook="admin_ideas_index_row_actions">
-              <%= import_idea_to_product_link idea %>
-            </td>
-          </tr>
-      <% end %>
-      </tbody>
-    </table>
-<% else %>
-    <div class="alpha twelve columns no-objects-found">
-      <%= Spree.t(:no_ideas_found) %>
+<% if @connection_refused %>
+  <div class="row">
+    <div class="alpha twelve columns error-text">
+      Couldn't reach api endpoint ( <%= Spree::Mockbot::Idea.site %> ). <br />
     </div>
+  </div>
+<% elsif @ideas.any? %>
+  <%= paginate @ideas %>
+
+  <table class="index" id="listing_ideas">
+    <colgroup>
+      <col style="width: 15%;">
+      <col style="width: 48%;">
+      <col style="width: 20%;">
+      <col style="width: 17%;">
+    </colgroup>
+    <thead>
+    <tr data-hook="admin_ideas_index_headers">
+      <th><%= Spree.t(:sku) %></th>
+      <th><%= Spree.t(:mockbot_status) %></th>
+      <th>Spree Matches</th>
+      <th data-hook="admin_ideas_index_header_actions" class="actions"></th>
+    </tr>
+    </thead>
+    <tbody>
+    <% @ideas.each do |idea| %>
+        <tr data-hook="admin_ideas_index_rows" class="<%= cycle('odd', 'even') %>">
+          <td class="align-center"><%= link_to idea.sku, mockbot_idea_remote_url(idea), target: '_blank' rescue 'Error retrieving sku' %></td>
+          <td class="align-center"><%= idea.status rescue 'Unknown status' %></td>
+          <td><%= links_to_product_from_idea idea %></td>
+          <td class="actions" data-hook="admin_ideas_index_row_actions">
+            <%= import_idea_to_product_link idea %>
+          </td>
+        </tr>
+    <% end %>
+    </tbody>
+  </table>
+<% else %>
+  <div class="alpha twelve columns no-objects-found">
+    <%= Spree.t(:no_ideas_found) %>
+  </div>
 <% end %>

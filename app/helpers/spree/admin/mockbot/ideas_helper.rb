@@ -1,9 +1,5 @@
 module Spree::Admin::Mockbot::IdeasHelper
 
-  # TODO MONDAY
-  # Get these guys up and functioning in the index.html.erb for spree_mockbot_integration.
-  # After that, add the search!
-
   def mockbot_idea_remote_url(idea)
     return "#{Figaro.env['mockbot_home'].chomp('/')}/ideas/#{idea.sku.strip}"
   end
@@ -16,12 +12,13 @@ module Spree::Admin::Mockbot::IdeasHelper
   end
 
   def import_idea_to_product_link(idea)
+    publish_path = "/admin/mockbot/ideas/publish/please-implement-me"
     if idea.status == 'Ready to Publish'
-      link_to 'Publish', "/admin/mockbot/ideas/publish/please-implement-me"
+      button_to 'Publish', publish_path, class: 'btn btn-default'
     elsif idea.status == 'Published'
-      link_to 'Republish', "/admin/mockbot/ideas/publish/please-implement-me"
+      button_to 'Republish', publish_path, class: 'btn btn-default'
     else
-      "Can't publish yet"
+      button_to "Can't publish yet", publish_path, class: 'btn btn-default', disabled: 'disabled'
     end
   end
 end

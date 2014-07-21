@@ -13,6 +13,7 @@ FactoryGirl.define do
         "The idea with the sequence number #{n} generated with FactoryGirl"
       end
       status "Pending"
+      priority 3
     end
   end
 end

@@ -21,5 +21,21 @@ describe Spree::Admin::Mockbot::IdeasController, mockbot_spec: true do
       spree_get :index, search: 'keyword'
       expect(assigns(:ideas).count).to eq 2
     end
+
+    context 'when the mockbot api endpoint is bad' do
+      before :each do
+        allow(Spree::Mockbot::Idea).to receive(:all).and_raise Errno::ECONNREFUSED
+      end
+
+      it 'should catch the error and assign @connection_refused as true' do
+        expect{spree_get :index}.to_not raise_error
+        expect(assigns(:connection_refused)).to be_truthy
+      end
+    end
+
+    it '@connection_refused should be nil' do
+      spree_get :index
+      expect(assigns(:connection_refused)).to be_nil
+    end
   end
 end

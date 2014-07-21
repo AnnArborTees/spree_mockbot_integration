@@ -16,4 +16,15 @@ describe '/spree/admin/mockbot/ideas/index.html.erb', mockbot_spec: true do
     expect(rendered).to have_content idea1.sku
     expect(rendered).to have_content idea2.sku
   end
+
+  context 'when @connection_refused is true' do
+    before :each do
+      assign(:connection_refused, true)
+    end
+
+    it 'should inform the user' do
+      render
+      expect(rendered).to have_content "Couldn't reach api endpoint"
+    end
+  end
 end

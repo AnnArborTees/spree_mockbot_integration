@@ -66,6 +66,15 @@ RSpec.configure do |config|
   # to setup a test will be unavailable to the browser, which runs under a separate server instance.
   config.use_transactional_fixtures = false
 
+  # Unsure why, but I appear to need to stub url helpers for the tests.
+  config.before :each do
+    if defined? view
+      allow(view).to receive(:admin_mockbot_ideas_url).and_return "/spree/admin/mockbot/ideas"
+      allow(view).to receive(:admin_mockbot_idea_url).and_return "/spree/admin/mockbot/idea"
+      allow(view).to receive(:admin_mockbot_settings_url).and_return "/spree/admin/mockbot/settings"
+    end
+  end
+
   # Ensure Suite is set to use transactions for speed.
   config.before :suite do
     DatabaseCleaner.strategy = :transaction

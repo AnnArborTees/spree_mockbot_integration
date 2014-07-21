@@ -4,10 +4,10 @@ module Spree
       add_response_method :http_response
       self.collection_parser = ::ActiveResourcePagination::PaginatedCollection
 
-      # headers['X-User-Email'] = Figaro.env['user_email']
-      # headers['X-User-Token'] = Figaro.env['user_token']
+      # headers['Mockbot-User-Email'] = MockbotSettings.auth_email
+      # headers['Mockbot-User-Token'] = MockbotSettings.auth_token
 
-      self.site = Figaro.env['api_endpoint']
+      self.site = URI.parse(MockbotSettings.api_endpoint)
     end
   end
 end
