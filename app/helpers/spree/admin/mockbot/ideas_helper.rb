@@ -17,9 +17,9 @@ module Spree::Admin::Mockbot::IdeasHelper
 
   def import_idea_to_product_link(idea)
     if idea.status == 'Ready to Publish'
-      'Publish'
+      link_to 'Publish', "/admin/mockbot/ideas/publish/please-implement-me"
     elsif idea.status == 'Published'
-      'Republish'
+      link_to 'Republish', "/admin/mockbot/ideas/publish/please-implement-me"
     else
       "Can't publish yet"
     end

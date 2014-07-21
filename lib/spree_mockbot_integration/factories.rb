@@ -12,6 +12,7 @@ FactoryGirl.define do
       sequence(:working_description) do |n|
         "The idea with the sequence number #{n} generated with FactoryGirl"
       end
+      status "Pending"
     end
   end
 end

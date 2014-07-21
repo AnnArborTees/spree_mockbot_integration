@@ -22,18 +22,18 @@
         <th><%= Spree.t(:mockbot_status) %></th>
         <th>Spree Matches</th>
         <th></th>
-        <th data-hook="admin_ideas_index_header_actions" class="actions"></th>
+        <th data-hook="admin_ideas_index_header_actions" class="actions">Publish</th>
       </tr>
       </thead>
       <tbody>
       <% @ideas.each do |idea| %>
           <tr data-hook="admin_ideas_index_rows" class="<%= cycle('odd', 'even') %>">
-            <td class="align-center"><%=  link_to idea.sku, mockbot_idea_remote_url(idea), target: '_blank' rescue 'oh no' %></td>
-            <td class="align-center"><%= idea.status rescue 'oh god' %></td>
-            <td><%= links_to_product_from_idea(idea) %></td>
+            <td class="align-center"><%=  link_to idea.sku, mockbot_idea_remote_url(idea), target: '_blank' rescue 'Error retrieving sku' %></td>
+            <td class="align-center"><%= idea.status rescue 'Unknown status' %></td>
+            <td><%= links_to_product_from_idea idea %></td>
             <td class="align-center"></td>
             <td class="actions" data-hook="admin_ideas_index_row_actions">
-                <%= import_idea_to_product_link idea %>
+              <%= import_idea_to_product_link idea %>
             </td>
           </tr>
       <% end %>
