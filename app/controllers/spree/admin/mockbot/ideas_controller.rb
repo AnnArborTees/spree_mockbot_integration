@@ -2,6 +2,8 @@ module Spree
   module Admin
     module Mockbot
       class IdeasController < BaseController
+        helper IdeasHelper
+
         def index
           params[:page] = 1 if params[:page].nil?
           ideas = Spree::Mockbot::Idea.all(params: passed_params)
@@ -11,6 +13,7 @@ module Spree
               :total_count => ideas.http_response['Pagination-TotalEntries'].to_i
             }
           )
+          @last_search = params[:search]
         end
 
         def show
