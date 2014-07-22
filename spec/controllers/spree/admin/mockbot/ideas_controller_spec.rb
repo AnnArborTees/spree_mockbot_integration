@@ -33,6 +33,17 @@ describe Spree::Admin::Mockbot::IdeasController, mockbot_spec: true do
       end
     end
 
+    context 'when the authentication info is bad', pending: "TODO actually stub authentication using endpoint_stub." do
+      before :each do
+        allow(Spree::Mockbot::Idea).to receive(:all).and_raise ActiveResource::UnauthorizedAccess
+      end
+
+      it 'should catch the error and assign @unauthorized_access as true' do
+        expect{spree_get :index}.to_not raise_error
+        expect(assigns(:unauthorized_access)).to be_truthy
+      end
+    end
+
     it '@connection_refused should be nil' do
       spree_get :index
       expect(assigns(:connection_refused)).to be_nil

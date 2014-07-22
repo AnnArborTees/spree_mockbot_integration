@@ -18,6 +18,9 @@ module Spree
           rescue Errno::ECONNREFUSED
             @connection_refused = true
             @ideas = []
+          rescue ActiveResource::UnauthorizedAccess
+            @unauthorized_access = true
+            @ideas = []
           end
         end
 

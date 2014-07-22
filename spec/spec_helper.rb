@@ -80,16 +80,19 @@ RSpec.configure do |config|
     DatabaseCleaner.strategy = :transaction
     DatabaseCleaner.clean_with :truncation
 
-    # We also activate endpoint stub, and make the index response emulate pagination.
+    # We also activate endpoint stub.
     EndpointStub.activate!
-    idea_stub = Endpoint::Stub.create_for Spree::Mockbot::Idea
-    EndpointActions.mock_for_ideas idea_stub
   end
+
+  EndpointActions.mock_for_ideas config, email: 'test@test.com', token: 'AbC123'
 
   # Before each spec check if it is a Javascript test and switch between using database transactions or not where necessary.
   config.before :each do |example|
     DatabaseCleaner.strategy = example.metadata[:js] ? :truncation : :transaction
     DatabaseCleaner.start
+
+    # Default to no stubbed authentication.
+    EndpointActions.do_authentication = false
   end
 
   # After each spec clean the database.

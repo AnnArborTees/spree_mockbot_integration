@@ -27,4 +27,15 @@ describe '/spree/admin/mockbot/ideas/index.html.erb', mockbot_spec: true do
       expect(rendered).to have_content "Couldn't reach api endpoint"
     end
   end
+
+  context 'when @unauthorized_access is true' do
+    before :each do
+      assign(:unauthorized_access, true)
+    end
+
+    it 'should inform the user' do
+      render
+      expect(rendered).to have_content "Remote authentication failed"
+    end
+  end
 end
