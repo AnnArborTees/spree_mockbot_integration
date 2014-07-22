@@ -33,9 +33,9 @@ describe Spree::Admin::Mockbot::IdeasController, mockbot_spec: true do
       end
     end
 
-    context 'when the authentication info is bad', pending: "TODO actually stub authentication using endpoint_stub." do
+    context 'when the authentication info is bad' do
       before :each do
-        allow(Spree::Mockbot::Idea).to receive(:all).and_raise ActiveResource::UnauthorizedAccess
+        EndpointActions.do_authentication = true
       end
 
       it 'should catch the error and assign @unauthorized_access as true' do
