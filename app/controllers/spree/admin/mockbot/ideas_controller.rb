@@ -15,7 +15,7 @@ module Spree
               }
             )
             @last_search = params[:search]
-          rescue Errno::ECONNREFUSED
+          rescue Errno::ECONNREFUSED, TypeError
             @connection_refused = true
             @ideas = []
           rescue ActiveResource::UnauthorizedAccess

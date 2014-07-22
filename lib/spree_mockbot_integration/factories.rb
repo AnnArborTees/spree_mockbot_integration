@@ -12,8 +12,18 @@ FactoryGirl.define do
       sequence(:working_description) do |n|
         "The idea with the sequence number #{n} generated with FactoryGirl"
       end
+      sequence(:description) do |n|
+        "The idea with the sequence number #{n} generated with FactoryGirl"
+      end
       status "Pending"
       priority 3
+
+      product_type 'T-Shirt'
+      meta_keywords 'test one two three'
+      meta_description 'whateverrrrrrrrrrrrrrr'
+      base_price 15.99
+      shipping_category "Test Shipping"
+      tax_category "Test Tax"
     end
   end
 end
