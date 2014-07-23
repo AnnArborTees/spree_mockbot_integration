@@ -39,5 +39,36 @@ describe Spree::MockbotSetting, settings_spec: true do
         expect(it.auth_token).to eq 'token'
       end
     end
+
+    describe '#reset' do
+      it 'resets the settings to the defaults defined in application.yml' do
+        allow(Figaro).to receive(:env).and_return({
+          'mockbot_home' => 'http://home.com/test',
+          'api_endpoint' => 'http://end.com/test',
+          'auth_email' => 'test@test.com',
+          'auth_token' => 'token'
+        })
+
+        Spree::MockbotSetting.instance.tap do |it|
+          it.mockbot_home = 'http://other_home.net/api'
+          it.api_endpoint = 'http://other_end.net/api'
+          it.auth_email = 'other_test@test.com'
+          it.auth_token = 'other_token'
+          it.save
+
+          expect(it.mockbot_home).to eq 'http://other_home.net/api'
+          expect(it.api_endpoint).to eq 'http://other_end.net/api'
+          expect(it.auth_email).to eq 'other_test@test.com'
+          expect(it.auth_token).to eq 'other_token'
+
+          it.reset!
+
+          expect(it.mockbot_home).to eq 'http://home.com/test'
+          expect(it.api_endpoint).to eq 'http://end.com/test'
+          expect(it.auth_email).to eq 'test@test.com'
+          expect(it.auth_token).to eq 'token'
+        end
+      end
+    end
   end
 end

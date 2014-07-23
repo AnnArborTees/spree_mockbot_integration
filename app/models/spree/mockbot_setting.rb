@@ -14,12 +14,19 @@ module Spree
       rescue ActiveRecord::RecordNotFound
         settings = MockbotSetting.new
         settings.singleton_guard = 0
-        %w(auth_token auth_email mockbot_home api_endpoint).each do |attr|
-          settings.send "#{attr}=", Figaro.env[attr]
-        end
-        settings.save
-        settings
+        settings.reset!
       end
+    end
+
+    def reset!
+      reset;save;self
+    end
+
+    def reset
+      %w(auth_token auth_email mockbot_home api_endpoint).each do |attr|
+        send "#{attr}=", Figaro.env[attr]
+      end
+      self
     end
   end
 end

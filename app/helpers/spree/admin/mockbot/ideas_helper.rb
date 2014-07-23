@@ -5,7 +5,7 @@ module Spree::Admin::Mockbot::IdeasHelper
   end
 
   def links_to_product_from_idea(idea)
-    s = Spree::Product.where(spree_variants: {sku: idea.sku}).joins(:master).map{ |x|
+    s = idea.associated_spree_products.map{ |x|
       link_to x.sku, edit_admin_product_path(x)
     }.join(',').html_safe
     s.empty? ? "No matching products" : s
