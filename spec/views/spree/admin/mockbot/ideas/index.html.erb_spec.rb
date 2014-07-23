@@ -38,4 +38,46 @@ describe '/spree/admin/mockbot/ideas/index.html.erb', mockbot_spec: true do
       expect(rendered).to have_content "Remote authentication failed"
     end
   end
+
+  context 'when there is a published idea' do
+    let!(:idea) { create :published_mockbot_idea }
+
+    it 'should display a "re-publish" button' do
+      assign(:ideas,
+        Kaminari::PaginatableArray.new(Spree::Mockbot::Idea.all,{
+          limit: 100, offset: 0, total_count: 1
+        })
+      )
+      render
+      expect(rendered).to have_css "input[value='Republish']:not([disabled])"
+    end
+  end
+
+  context 'when there is a publishable idea' do
+    let!(:idea) { create :publishable_mockbot_idea }
+
+    it 'should allow the publish button to be clicked' do
+      assign(:ideas,
+        Kaminari::PaginatableArray.new(Spree::Mockbot::Idea.all,{
+          limit: 100, offset: 0, total_count: 1
+        })
+      )
+      render
+      expect(rendered).to have_css "input[value='Publish']:not([disabled])"
+    end
+  end
+
+  context 'when there is a not-yet-publishable idea' do
+    let!(:idea) { create :mockbot_idea }
+
+    it 'should a disabled "Can\'t publish yet" button' do
+      assign(:ideas,
+        Kaminari::PaginatableArray.new(Spree::Mockbot::Idea.all,{
+          limit: 100, offset: 0, total_count: 1
+        })
+      )
+      render
+      expect(rendered).to have_css 'input[value*="publish yet"][disabled]'
+    end
+  end
 end

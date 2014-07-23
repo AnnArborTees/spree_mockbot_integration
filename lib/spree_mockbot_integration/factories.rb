@@ -24,6 +24,14 @@ FactoryGirl.define do
       base_price 15.99
       shipping_category "Test Shipping"
       tax_category "Test Tax"
+
+      factory :publishable_mockbot_idea do
+        status 'Ready to Publish'
+      end
+
+      factory :published_mockbot_idea do
+        status 'Published'
+      end
     end
   end
 end
