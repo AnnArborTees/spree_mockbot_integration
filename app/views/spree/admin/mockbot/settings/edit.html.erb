@@ -3,14 +3,14 @@
 <% end %>
 
 <div class="row">
-  <%= link_to "<- Idea list", admin_mockbot_ideas_url %>
+  <%= link_to "<- Idea list", admin_mockbot_ideas_url, class: 'button' %>
 </div>
 
 <div class="row">
-  Note: The server will need to be restarted if you change the API Endpoint.
+  Note: The server may need to be restarted if you change the API Endpoint.
 </div>
 
-<%= form_tag admin_mockbot_settings_url, method: 'PUT' do %>
+<%= form_tag admin_mockbot_settings_url, method: 'PUT', id: 'mockbot-settings-form' do %>
   <div class="form-group">
     <%= label_and_input_for 'mockbot_home', "MockBot Homepage" %>
   </div>
@@ -25,4 +25,5 @@
   </div>
 
   <%= submit_tag 'Update', name: '' %>
+  <%= link_to "Reload Defaults", '', class: 'button', id: 'reset-mockbot-settings-button' %>
 <% end %>

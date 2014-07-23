@@ -24,6 +24,15 @@ module Spree
           end
         end
 
+        def reset
+          @settings = MockbotSetting.instance
+          respond_to do |format|
+            format.json do
+              render json: @settings.reset
+            end
+          end
+        end
+
         private
         def permitted_params
           params.permit(mockbot_settings: [:mockbot_home, :api_endpoint, :auth_email, :auth_token])

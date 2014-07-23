@@ -6,6 +6,7 @@ Spree::Core::Engine.routes.draw do
       end
       get '/settings', to: 'settings#edit', as: :settings
       put '/settings', to: 'settings#update'
+      post '/settings', to: 'settings#reset'
     end
   end
 end
