@@ -26,7 +26,7 @@ class EndpointActions
               r[n] && r[n].downcase.include?(query['search'].downcase) } } if query && query['search']
 
           {
-            body: records.sort_by { |r| r[:sku] },
+            body: records.sort_by { |r| r && r[:sku] },
             headers: {
               'Pagination-Limit' => 100,
               'Pagination-Offset' => 0,
@@ -36,13 +36,22 @@ class EndpointActions
         end
 
         # Overwrite default find to find by sku instead of id.
-        idea_stub.mock_response :get, '/:id.json' do |request, params, stub|
-          { body: stub.records.find { |r| r and r[:sku] == params[:id] } }
+        idea_stub.override_response :get, '/:id.json' do |request, params, stub, &rsuper|
+          id = stub.records.find_index { |r| r and r[:sku] == params[:id] }
+          params[:id] = id
+          rsuper.call request, {id: id}
+        end
+
+        # Update also...
+        idea_stub.override_response :put, '/:id.json' do |request, params, stub, &rsuper|
+          id = stub.records.find_index { |r| r and r[:sku] == params[:id] }
+          params[:id] = id
+          rsuper.call request, {id: id}
         end
 
         # And add authentication
-        idea_stub.override_all do |request, params, stub, &supre|
-          auth.call request, expected_email, expected_token, &supre
+        idea_stub.override_all do |request, params, stub, &rsuper|
+          auth.call request, expected_email, expected_token, &rsuper
         end
       end # config.before :suite
     end

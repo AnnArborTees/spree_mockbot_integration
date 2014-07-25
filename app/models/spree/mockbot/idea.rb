@@ -26,8 +26,12 @@ module Spree
         Spree::Product.where(spree_variants: {sku: self.sku}).joins(:master).readonly(false)
       end
 
+      def all_images
+        mockups.to_a + thumbnails.to_a
+      end
+
       def build_product
-        Spree::Product.new.tap(&method(:copy_to_product))
+        copy_to_product Spree::Product.new
       end
 
       def publish!(ignore_errors=false)
@@ -41,14 +45,21 @@ module Spree
 
           products.each do |product|
             copy_to_product product
-            product.available_on = Time.now
+            copy_images_to product
 
-            if product.valid?
-              okay_products << product unless ignore_errors
+            if product.valid? and product.images.all?(&:valid?)
+              okay_products << product
+
+              product.available_on = Time.now
               product.save
             else
               error_products << product unless ignore_errors
             end
+          end
+
+          unless okay_products.empty?
+            self.status = 'Published'
+            save
           end
 
           unless error_products.empty? or ignore_errors
@@ -60,13 +71,20 @@ module Spree
           end
         else
           [] << build_product.tap do |product|
-            product.available_on = Time.now
-            if product.valid? or ignore_errors
+            copy_images_to product
+            
+            if product.valid? && product.images.all?(&:valid?) or ignore_errors
+              product.available_on = Time.now
               product.save
               assign_sku_to product
+
+              self.status = 'Published'
+              save
             else
               raise PublishError.new([product], []), %{
-                Failed to create a product for idea #{sku}}
+                Failed to create a product for idea #{sku}
+                #{product.errors.messages}
+              }
             end
           end
         end
@@ -81,6 +99,31 @@ module Spree
           end
         else
           raise "Product #{product.name} somehow doesn't have a master variant."
+        end
+      end
+
+      def copy_images_to(product)
+        product.images.destroy_all
+
+        copy = ->(mockup, is_thumbnail) do
+          image = Spree::Image.new
+          image.attachment = open mockup_url mockup
+          image.position = is_thumbnail ? 0 : product.images.count
+          image.alt = mockup.description
+
+          product.images << image
+          image.save
+        end
+
+        mockups.each    { |m| copy[m, false] }
+        thumbnails.each { |t| copy[t, true] }
+      end
+
+      def mockup_url(mockup)
+        if Rails.env.test?
+          mockup.file_url
+        else
+          raise "What the hell should this be?"
         end
       end
 
@@ -100,6 +143,8 @@ module Spree
           (Spree::TaxCategory.where(name: tax_category).first or
            Spree::TaxCategory.create(name: tax_category)
           ).id
+
+        return product
       end
     end
   end

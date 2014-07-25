@@ -149,6 +149,18 @@ describe Spree::Mockbot::Idea, wip: true do
       end
     end
 
+    context 'when the idea has images', image: true do
+      subject(:subject) { create :mockbot_idea_with_images }
+
+      before(:each) { WebMockApi.stub_test_image! }
+
+      it 'should add images based off of the idea\'s mockups' do
+        subject.publish!.each do |product|
+          expect(product.images.count).to eq 2
+        end
+      end
+    end
+
     context 'when the idea already has a matching product' do
       let!(:matching_product) { create :custom_product, name: 'Matching' }
       before :each do

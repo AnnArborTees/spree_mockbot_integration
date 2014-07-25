@@ -32,6 +32,14 @@ FactoryGirl.define do
       factory :published_mockbot_idea do
         status 'Published'
       end
+
+      factory :mockbot_idea_with_images do
+        status 'Published'
+        mockups [Struct.new(:file_url, :description).
+          new("http://test-file-url.com/test_files/#{(1..10).to_a.sample}.png", "Test Description")]
+        thumbnails [Struct.new(:file_url, :description).
+          new("http://test-file-url.com/test_thumbs/#{(1..10).to_a.sample}.png", "Test Description")]
+      end
     end
   end
 end

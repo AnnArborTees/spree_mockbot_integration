@@ -19,6 +19,7 @@ require 'rspec/rails'
 require 'database_cleaner'
 require 'ffaker'
 require 'endpoint_stub'
+require 'webmock'
 
 # Requires supporting ruby files with custom matchers and macros, etc,
 # in spec/support/ and its subdirectories.
@@ -61,19 +62,14 @@ RSpec.configure do |config|
   # Remove this line if you're not using ActiveRecord or ActiveRecord fixtures
   config.fixture_path = "#{::Rails.root}/spec/fixtures"
 
+  Capybara.register_driver :selenium do |app|
+    Capybara::Selenium::Driver.new(app, browser: :chrome)
+  end
+
   # Capybara javascript drivers require transactional fixtures set to false, and we use DatabaseCleaner
   # to cleanup after each test instead.  Without transactional fixtures set to false the records created
   # to setup a test will be unavailable to the browser, which runs under a separate server instance.
   config.use_transactional_fixtures = false
-
-  # Unsure why, but I appear to need to stub url helpers for the tests.
-  config.before :each do
-    if defined? view
-      allow(view).to receive(:admin_mockbot_ideas_url).and_return "/spree/admin/mockbot/ideas"
-      allow(view).to receive(:admin_mockbot_idea_url).and_return "/spree/admin/mockbot/idea"
-      allow(view).to receive(:admin_mockbot_settings_url).and_return "/spree/admin/mockbot/settings"
-    end
-  end
 
   # Ensure Suite is set to use transactions for speed.
   config.before :suite do
@@ -82,6 +78,7 @@ RSpec.configure do |config|
 
     # We also activate endpoint stub.
     EndpointStub.activate!
+    WebMock.disable_net_connect! allow_localhost: true
   end
 
   EndpointActions.mock_for_ideas config, email: 'test@test.com', token: 'AbC123'
@@ -90,6 +87,8 @@ RSpec.configure do |config|
   config.before :each do |example|
     DatabaseCleaner.strategy = example.metadata[:js] ? :truncation : :transaction
     DatabaseCleaner.start
+
+    WebMockApi.clear!
 
     # Default to no stubbed authentication.
     EndpointActions.do_authentication = false

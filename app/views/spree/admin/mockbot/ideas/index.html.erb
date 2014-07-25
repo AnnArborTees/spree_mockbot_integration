@@ -8,7 +8,7 @@
     <%= render partial: 'spree/admin/shared/idea_search' %>
   </div>
   <div class="alpha six columns">
-    <%= link_to "Settings", admin_mockbot_settings_url, class: 'button' %>
+    <%= link_to "Settings", spree.admin_mockbot_settings_url, class: 'button' %>
   </div>
 </div>
 
@@ -22,7 +22,7 @@
   <div class="row">
     <div class="alpha twelve columns error-text">
       Remote authentication failed. Check the authorization email and token in the 
-      <%= link_to 'settings', admin_mockbot_settings_url %>.
+      <%= link_to 'settings', spree.admin_mockbot_settings_url %>.
     </div>
   </div>
 <% elsif @ideas.any? %>
@@ -45,7 +45,7 @@
     </thead>
     <tbody>
     <% @ideas.each do |idea| %>
-        <tr data-hook="admin_ideas_index_rows" class="<%= cycle('odd', 'even') %>">
+        <tr data-hook="admin_ideas_index_rows" class="<%= cycle('odd', 'even') %>", id="row-for-<%= idea.sku %>">
           <td class="align-center"><%= link_to idea.sku, mockbot_idea_remote_url(idea), target: '_blank' rescue 'Error retrieving sku' %></td>
           <td class="align-center"><%= idea.status rescue 'Unknown status' %></td>
           <td><%= links_to_product_from_idea idea %></td>
