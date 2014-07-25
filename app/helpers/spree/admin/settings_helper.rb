@@ -1,4 +1,4 @@
-module Spree::Admin::Mockbot::SettingsHelper
+module Spree::Admin::SettingsHelper
   def settings_label(name, display)
     label_tag("mockbot_settings[#{name}]", display)
   end

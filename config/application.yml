@@ -1,4 +1,4 @@
-mockbot_home: 'http://test.com:2999'
-api_endpoint: 'http://test.com:2999/api'
-auth_email: 'admin@softwearcrm.com'
-auth_token: '1u88xt29AVTQG1U5mLTP'
+mockbot_homepage: 'http://test.com:2999'
+mockbot_endpoint: 'http://test.com:2999/api'
+mockbot_email: 'admin@softwearcrm.com'
+mockbot_token: '1u88xt29AVTQG1U5mLTP'

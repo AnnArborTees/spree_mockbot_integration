@@ -20,7 +20,7 @@ module Spree
         )
       end
 
-      self.site = URI.parse(MockbotSettings.api_endpoint)
+      self.site = URI.parse(MockbotSettings.api_endpoint || "http://error-site.err")
 
       def associated_spree_products
         Spree::Product.where(spree_variants: {sku: self.sku}).joins(:master).readonly(false)

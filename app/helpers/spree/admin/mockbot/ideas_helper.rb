@@ -1,7 +1,7 @@
 module Spree::Admin::Mockbot::IdeasHelper
 
   def mockbot_idea_remote_url(idea)
-    return "#{Figaro.env['mockbot_home'].chomp('/')}/ideas/#{idea.sku.strip}"
+    return "#{Figaro.env['mockbot_homepage'].chomp('/')}/ideas/#{idea.sku.strip}"
   end
 
   def links_to_product_from_idea(idea)
