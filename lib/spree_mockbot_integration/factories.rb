@@ -18,6 +18,9 @@ FactoryGirl.define do
       status "Pending"
       priority 3
 
+      mockups []
+      thumbnails []
+
       product_type 'T-Shirt'
       meta_keywords 'test one two three'
       meta_description 'whateverrrrrrrrrrrrrrr'
