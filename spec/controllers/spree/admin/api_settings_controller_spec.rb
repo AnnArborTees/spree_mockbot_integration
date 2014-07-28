@@ -1,5 +1,9 @@
 require 'spec_helper'
 
+class TestSettings < Spree::ApiSettings
+
+end
+
 describe Spree::Admin::ApiSettingsController, settings_spec: false do
   before(:each) { sign_in create(:admin_user) }
 
@@ -33,5 +37,35 @@ describe Spree::Admin::ApiSettingsController, settings_spec: false do
 
     expect(flash[:success]).to include "Successfully updated Mockbot settings!"
     expect(flash[:success]).to include "Successfully updated Crm settings!"
+  end
+
+  describe 'GET #defaults', settings_defaults: true do
+    before :each do
+      allow(Figaro).to receive(:env).and_return({
+          'test_homepage' => 'http://home.com/test',
+          'test_api_endpoint' => 'http://end.com/test',
+          'test_auth_email' => 'test@test.com',
+          'test_auth_token' => 'token'
+        })
+    end
+
+    it 'assigns an unsaved record with the default values from application.yml' do
+      settings = TestSettings.instance
+      settings.homepage = "http://something-else.com/wahtever"
+      settings.api_endpoint = "http://other.com/testapi"
+      settings.auth_email = "somethingelse@something.els"
+      settings.auth_token = "jfjfjfjdkdjdkd"
+      settings.save
+      expect(settings).to be_valid
+
+      spree_get :defaults, id: settings.id, format: :js
+
+      expect(assigns(:settings)).to be_a Spree::ApiSettings
+      expect(assigns(:settings)).to be_changed
+      expect(assigns(:settings).homepage).to eq 'http://home.com/test'
+      expect(assigns(:settings).api_endpoint).to eq 'http://end.com/test'
+      expect(assigns(:settings).auth_email).to eq 'test@test.com'
+      expect(assigns(:settings).auth_token).to eq 'token'
+    end
   end
 end

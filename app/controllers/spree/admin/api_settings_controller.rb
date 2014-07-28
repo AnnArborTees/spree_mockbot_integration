@@ -4,7 +4,20 @@ module Spree
       helper SettingsHelper
       before_filter :assign_settings
 
+      def defaults
+        @settings = ApiSettings.find(params[:id]).reset
+        respond_to do |format|
+          format.js { render }
+        end
+      end
+
       def edit
+        respond_to do |format|
+          format.html { render }
+          format.json do
+            render json: @all_settings.map(&:to_h).inject({})
+          end
+        end
       end
 
       def update
@@ -51,6 +64,8 @@ module Spree
       def assign_settings
         @mockbot_settings = MockbotSettings.instance
         @crm_settings = CrmSettings.instance
+
+        @all_settings = [@mockbot_settings, @crm_settings]
       end
 
       def permitted_params

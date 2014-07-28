@@ -7,6 +7,6 @@ Spree::Core::Engine.routes.draw do
     end
     get '/api_settings', to: 'api_settings#edit', as: :api_settings
     put '/api_settings', to: 'api_settings#update'
-    post '/api_settings', to: 'api_settings#reset'
+    get '/api_settings/:id', to: 'api_settings#defaults', as: :default_api_settings
   end
 end

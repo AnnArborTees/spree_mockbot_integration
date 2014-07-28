@@ -15,7 +15,7 @@ module Spree
     end
 
     ATTRIBUTES.each do |attr|
-      class_eval <<-RUBY
+      class_eval <<-RUBY, __FILE__, __LINE__
         def self.#{attr}
           instance.#{attr}
         end
@@ -25,6 +25,10 @@ module Spree
       RUBY
     end
 
+    # TODO MONDAY
+    # Uhhhhhh, see if the settings edit page works, maybe write a spec for it.
+    # Then start working on variants / crm api endpoint!
+
     def reset!
       reset;save;self
     end
@@ -32,8 +36,13 @@ module Spree
     def reset
       ATTRIBUTES.each do |attr|
         new_value = Figaro.env["#{config_prefix}_#{attr}"]
-        if new_value.nil? and Rails.env.test?
-          send "#{attr}=", 'http://test'
+        if new_value.nil?
+          if Rails.env.test?
+            send "#{attr}=", 'http://test'
+          else
+            destroy
+            raise "Please add #{config_prefix}_#{attr} to application.yml"
+          end
         else
           send "#{attr}=", new_value unless new_value.nil?
         end

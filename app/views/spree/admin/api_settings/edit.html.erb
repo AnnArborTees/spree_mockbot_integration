@@ -7,23 +7,35 @@
 </div>
 
 <div class="row">
-  Note: The server may need to be restarted if you change the API Endpoint.
+  Note: The server may need to be restarted if you change an API endpoint.
 </div>
 
-<%= form_tag admin_mockbot_settings_url, method: 'PUT', id: 'mockbot-settings-form' do %>
-  <div class="form-group">
-    <%= label_and_input_for 'homepage', "MockBot Homepage" %>
-  </div>
-  <div class="form-group">
-    <%= label_and_input_for 'api_endpoint', "MockBot API Endpoint" %>
-  </div>
-  <div class="form-group">
-    <%= label_and_input_for 'auth_email', "API Authorization Email" %>
-  </div>
-  <div class="form-group">
-    <%= label_and_input_for 'auth_token', "API Authorization Token" %>
-  </div>
+<%= form_tag spree.admin_api_settings_url, method: 'PUT', id: 'api-settings-form' do %>
+  <% @all_settings.each do |settings| %>
+    <div class='form-group margin-bottom-35'>
 
+      <% input = method(:label_and_input_for).to_proc.curry[settings] %>
+
+      <div class="form-group">
+        <%= input.call 'homepage', "#{settings.config_prefix.humanize} Homepage" %>
+      </div>
+      <div class="form-group">
+        <%= input.call 'api_endpoint', "#{settings.config_prefix.humanize} API Endpoint" %>
+      </div>
+      <div class="form-group">
+        <%= input.call 'auth_email', "#{settings.config_prefix.humanize} Authorization Email" %>
+      </div>
+      <div class="form-group">
+        <%= input.call 'auth_token', "#{settings.config_prefix.humanize} Authorization Token" %>
+      </div>
+
+      <%= link_to "Reload Defaults", spree.admin_default_api_settings_path(settings.id), 
+                    class: 'button', 
+                    id: "reset-#{settings.config_prefix.underscore.gsub '_', '-'}-settings-button",
+                    remote: true
+                    %>
+
+    </div>
+  <% end %>
   <%= submit_tag 'Update', name: '' %>
-  <%= link_to "Reload Defaults", '', class: 'button', id: 'reset-mockbot-settings-button' %>
 <% end %>
