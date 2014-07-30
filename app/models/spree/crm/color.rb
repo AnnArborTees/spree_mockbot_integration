@@ -1,6 +1,6 @@
 module Spree
   module Crm
-    class Size < ActiveResource::Base
+    class Color < ActiveResource::Base
       include RemoteModel
       
       self.settings_class = CrmSettings

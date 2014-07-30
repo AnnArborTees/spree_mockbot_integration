@@ -60,8 +60,9 @@ module Spree
             product = @idea.associated_spree_products.
               where(slug: @idea.product_slug(color)).first || Spree::Product.new
 
-            @idea.copy_to_product(product, color).save
-            report product, product.valid?
+            @idea.copy_to_product(product, color)
+            @idea.assign_sku_to product
+            product.save if report product, product.valid?
 
             @products[color.name] = product
           end
@@ -128,7 +129,7 @@ module Spree
           end
         end
 
-        step :generate_variants do
+        step :generate_variants, next: :assign_skus do
           size_type  = option_type 'apparel-size', 'Size'
           color_type = option_type 'apparel-color', 'Color'
           style_type = option_type 'apparel-style', 'Style'
@@ -140,14 +141,12 @@ module Spree
           style_values = {}
 
           @products.each do |color_name, product|
-            color = @idea.colors.find { |c| c.name == color_name }
             product.variants.destroy_all
 
             [size_type, color_type, style_type].each do |type|
               product.option_types << type unless product.option_types.include? type
             end
             color_values[color_name] ||= option_value color_type, color_name
-            @idea.assign_sku_to product
 
             @sizes[color_name].each do |imprintable_name, sizes|
               imprintable = @idea.imprintables.find { |i| i.name == imprintable_name }
@@ -193,6 +192,16 @@ module Spree
           end
         end
 
+        step :assign_skus do
+          @products.each do |color_name, product|
+            
+          end
+
+          on_error do |good, bad|
+            
+          end
+        end
+
         private
         def report(object, condition)
           (condition ? okay : errored) << object
@@ -226,19 +235,13 @@ module Spree
       end
 
       # ======= Idea class =======
-
+      include RemoteModel
+      
+      self.settings_class = MockbotSettings
+      authenticates_with_email_and_token
       add_response_method :http_response
       self.collection_parser = ::ActiveResourcePagination::PaginatedCollection
       
-      def self.headers
-        (super or {}).merge(
-          'Mockbot-User-Token' => MockbotSettings.auth_token,
-          'Mockbot-User-Email' => MockbotSettings.auth_email
-        )
-      end
-
-      self.site = URI.parse(MockbotSettings.api_endpoint || "http://error-site.err")
-
       def associated_spree_products
         Spree::Product.where(spree_variants: {sku: self.sku}).joins(:master).readonly(false)
       end

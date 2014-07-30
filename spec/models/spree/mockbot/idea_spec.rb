@@ -248,17 +248,6 @@ describe Spree::Mockbot::Idea, wip: true do
           expect{publisher.generate_variants!}.to raise_error
         end
 
-        it 'should assign the sku to the master variants of the products' do
-          publisher.generate_products!
-          publisher.instance_variable_set(:@next_step, :gather_sizing_data)
-          publisher.gather_sizing_data!
-          publisher.generate_variants!
-
-          Spree::Product.all.map(&:master).each do |master_variant|
-            expect(master_variant.sku).to eq idea.sku
-          end
-        end
-
         it 'should create variants for @products, based on the data in @sizes with appropriate skus' do
           publisher.generate_products!
           publisher.instance_variable_set(:@next_step, :gather_sizing_data)
@@ -310,6 +299,20 @@ describe Spree::Mockbot::Idea, wip: true do
           style_type.first.option_values.map(&:name).tap do |styles|
             expect(styles).to include "unisex"
             expect(styles).to include "t_shirt"
+          end
+        end
+      end
+
+      describe '#assign_skus!' do
+        it 'should assign the sku to the master variants of the products' do
+          publisher.generate_products!
+          publisher.instance_variable_set(:@next_step, :gather_sizing_data)
+          publisher.gather_sizing_data!
+          publisher.generate_variants!
+          publisher.assign_skus!
+
+          Spree::Product.all.map(&:master).each do |master_variant|
+            expect(master_variant.sku).to eq idea.sku
           end
         end
       end
