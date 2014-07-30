@@ -11,7 +11,7 @@ class EndpointActions
       expected_token = options[:token]
       # config.before messes up the context, so we encapsulate our authenticate
       # method here.
-      auth = method :authenticate
+      auth = method(:authenticate).to_proc.curry['Mockbot']
 
       config.before :suite do
         # Overwrite default index to add pagination headers, 
@@ -56,11 +56,51 @@ class EndpointActions
       end # config.before :suite
     end
 
+    def mock_for_sizes(config, options={})
+      size_stub = Endpoint::Stub.create_for Spree::Crm::Size
+      expected_email = options[:email]
+      expected_token = options[:token]
+      # config.before messes up the context, so we encapsulate our authenticate
+      # method here.
+      auth = method(:authenticate).to_proc.curry['Crm']
+
+      config.before :suite do
+
+        # Stub size queries
+        size_stub.override_response :get, '.json' do |request, params, stub, &supr|
+          query = request.uri.query_values
+          if query['color'] and query['imprintable']
+            # The idea at this point would be to find the imprintable variants that corrospond to
+            # the given imprintable + color.
+            {
+              body: if query['imprintable'] == "Gildan 5000"
+                if query['color'] == 'Blue'
+                  [{ id: 3, name: 'Large', sku: '03' }, { id: 4, name: 'Extra Large', sku: '04' }]
+                else
+                  [{ id: 1, name: 'Small', sku: '01' }, { id: 2, name: 'Medium', sku: '02' }]
+                end
+              else
+                [{ id: 2, name: 'Medium', sku: '02' }, { id: 3, name: 'Large', sku: '03' }]
+              end
+            }
+          else
+            supr.call
+          end
+        end
+
+        size_stub.override_all do |request, params, stub, &rsuper|
+          auth.call request, expected_email, expected_token, &rsuper
+        end
+
+      end # config.before :suite
+    end
+
     private
-    def authenticate(request, expected_email, expected_token, &block)
+
+    def authenticate(prefix, request, expected_email, expected_token, &block)
       if @do_authentication
-        token = request.headers['Mockbot-User-Token']
-        email = request.headers['Mockbot-User-Email']
+        token = request.headers["#{prefix}-User-Token"]
+        email = request.headers["#{prefix}-User-Email"]
         if token && email and token == expected_token && email == expected_email
           yield
         else

@@ -81,7 +81,10 @@ RSpec.configure do |config|
     WebMock.disable_net_connect! allow_localhost: true
   end
 
-  EndpointActions.mock_for_ideas config, email: 'test@test.com', token: 'AbC123'
+  EndpointActions.mock_for_ideas config, email: 'test@test.com',    token: 'AbC123'
+  EndpointActions.mock_for_sizes config, email: 'test@testcrm.com', token: 'zYx987'
+  # COMING SOON:
+  # EndpointActions.mock_for_imprintables
 
   # Before each spec check if it is a Javascript test and switch between using database transactions or not where necessary.
   config.before :each do |example|
