@@ -4,11 +4,13 @@ module Spree
       class PublishError < StandardError
         attr_reader :errored
         attr_reader :okay
+        
         def initialize(errored, not_errored)
           @errored = errored
           @okay = not_errored
         end
       end
+
 
       class Publisher
         private
@@ -22,20 +24,27 @@ module Spree
               raise "Unexpected call to #{name} when next step was #{@next_step}."
             end
 
-            errored = []
-            okay = []
-            error_message = "Issue during step #{name}"
-            set_error_message = ->(msg) { error_message = msg }
+            @errored = []
+            @okay = []
+            @error_message = "There were errors while #{ingify name}"
 
-            instance_exec(errored, okay, set_error_message, &block)
+            instance_exec(&block)
+
             if errored.empty?
               @next_step = next_step
             else
-              raise PublishError.new(errored, okay), error_message
+              raise PublishError.new(errored, okay), if @error_message.respond_to?(:call)
+                                                       @error_message.call(errored, okay)
+                                                     else
+                                                       @error_message
+                                                     end
             end
           end
         end
         public
+
+        attr_reader :errored
+        attr_reader :okay
 
         attr_reader :next_step
         def initialize(idea)
@@ -43,9 +52,8 @@ module Spree
           @next_step = :generate_products
         end
 
-        step :generate_products, next: :import_images do |errored, okay, error_message|
+        step :generate_products, next: :import_images do
           raise "Idea has no colors!" if @idea.colors.count == 0
-          error_message["Some products may not have been generated."]
 
           @products = {}
           @idea.colors.each do |color|
@@ -53,45 +61,74 @@ module Spree
               where(slug: @idea.product_slug(color)).first || Spree::Product.new
 
             @idea.copy_to_product(product, color).save
-            (product.valid? ? okay : errored) << product
+            report product, product.valid?
 
             @products[color.name] = product
           end
+
+          okay.each do |product|
+            product.log_update "Successfully generated from idea #{@idea.sku}."
+          end
+          on_error do |bad, good|
+            if good.count == 0
+              "Failed to generate any products for idea #{@idea.sku}."
+            else
+              "Failed to generate #{bad.count}/#{good.count} products."
+            end + 
+            " Issues include: #{bad.map {|p|p.errors.full_messages}.uniq.join(', ')}"
+          end
         end
 
-        step :import_images, next: :gather_sizing_data do |errored, okay, error_message|
-          error_message["Couldn't import some images."]
-
+        step :import_images, next: :gather_sizing_data do
           @products.values.each do |product|
             failed = @idea.copy_images_to product
-            if failed.empty?
-              okay << product
+            report [product, failed], !failed.empty?
+          end
+
+          okay.each do |product_images|
+            product = product_images.first
+            images = product_images.last
+            product.log_update "Successfully added #{product.images.count} images from idea #{@idea.sku}."
+          end
+          on_error do |bad, good|
+            bad.each do |product, images|
+              product.log_update "ERROR: Failed to add #{images.count} images from idea #{@idea.sku}: #{images.map{|i| i.errors.full_messages.join(',')}}."
+            end
+            if good.empty?
+              "Failed to import any images from idea #{@idea.sku}."
             else
-              errored << [product, failed]
+              "Failed to import some images from idea #{@idea.sku}. Products affected: #{@products.values.map(&:slug).join(', ')}."
             end
           end
         end
 
-        step :gather_sizing_data, next: :generate_variants do |errored, okay, error_message|
+        step :gather_sizing_data, next: :generate_variants do
           @sizes = {}
+
           @idea.colors.each do |color|
 
             @sizes[color.name] = {}.tap do |imprintable_sizes_by_color|
 
               @idea.imprintables.each do |imprintable|
-                imprintable_sizes_by_color[imprintable.name] = 
-                  Spree::Crm::Size.all params: {
-                    imprintable: imprintable.name,
-                          color: color.name
-                  }
+                begin
+                  imprintable_sizes_by_color[imprintable.name] = 
+                    Spree::Crm::Size.all params: {
+                      imprintable: imprintable.name,
+                            color: color.name
+                    }
+                rescue e => StandardError
+                  errored << e
+                end
               end
             end
           end
+
+          on_error do
+            "Failed to gather sizing data from the SoftWear CRM."
+          end
         end
 
-        step :generate_variants do |errored, okay, error_message|
-          error_message["Errors occurred while generating product variants."]
-
+        step :generate_variants do
           size_type  = option_type 'apparel-size', 'Size'
           color_type = option_type 'apparel-color', 'Color'
           style_type = option_type 'apparel-style', 'Style'
@@ -121,6 +158,7 @@ module Spree
                 size_values[size.name] ||= option_value size_type, size.name
 
                 variant = Spree::Variant.new
+
                 product.variants << variant
 
                 variant.option_values << size_values[size.name]
@@ -131,13 +169,44 @@ module Spree
 
             ([size_values, color_values, style_values].map(&:values) + 
               [size_type, color_type, style_type]).flatten.each do |record|
-                (record.valid? ? okay : errored) << record
+                unless report record.valid?, record
+                  product.log_update "ERROR: bad #{record.class.name}: #{record.attributes} when generating variants."
+                end
             end
-            (product.valid? ? okay : errored) << product
+            unless report product.valid?, product
+              product.log_update "ERROR: generating variants caused errors: #{product.errors.full_messages.join(', ')}, with: #{product.attributes}."
+            end
+          end
+
+          on_error do |bad, good|
+            products = ->(r) { r.is_a? Product }
+            bad_products = bad.filter(&products)
+            bad_options  = bad.reject(&products)
+            
+            msg = ""
+            unless bad_products.count.empty?
+              msg += "#{bad_products.count} products became invalid. "
+            end
+            unless bad_options.count.empty?
+              msg += "Failed to create #{bad_options.count} variant options: #{bad_options.map { |e| "#{e.class.name}: e.attributes" }.join(', ')}. "
+            end
           end
         end
 
         private
+        def report(object, condition)
+          (condition ? okay : errored) << object
+          condition
+        end
+
+        def on_error(message=nil, &block)
+          @error_message = block || message
+        end
+
+        def ingify(str)
+          str.to_s.humanize.downcase.gsub!(/(e )|( ){1}/, 'ing ')
+        end
+
         def option_type(type, presentation=nil)
           case type
           when Spree::OptionType

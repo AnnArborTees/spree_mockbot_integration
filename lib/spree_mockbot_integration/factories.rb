@@ -35,9 +35,9 @@ FactoryGirl.define do
       tax_category "Test Tax"
 
       factory :mockbot_idea_with_colors do
-        colors [Color.new("Red", '001'),
-                Color.new("Blue", '002'),
-                Color.new("Green", '003')]
+        colors [Color.new("Red"),
+                Color.new("Blue"),
+                Color.new("Green")]
         imprintables [Imprintable.new("Gildan 5000",                           
                                       "Unisex",  "1234"),
                       Imprintable.new("American Apparel Standard or whatever", 
