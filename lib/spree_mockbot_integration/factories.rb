@@ -82,4 +82,24 @@ FactoryGirl.define do
       end
     end
   end
+
+  FactoryGirl.define do
+    factory :crm_color, class: Spree::Crm::Color do
+      sequence(:sku) do |n|
+        '0' * (3 - n.to_s.size) + n.to_s
+      end
+
+      name "Red"
+    end
+  end
+
+  FactoryGirl.define do
+    factory :crm_imprintable, class: Spree::Crm::Imprintable do
+      sequence(:sku) do |n|
+        '0' * (4 - n.to_s.size) + n.to_s
+      end
+
+      style_name 'Test Style'
+    end
+  end
 end

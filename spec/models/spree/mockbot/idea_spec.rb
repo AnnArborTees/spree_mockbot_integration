@@ -190,12 +190,12 @@ describe Spree::Mockbot::Idea, wip: true do
         end
       end
 
-      describe '#import_images!' do
+      describe '#import_images!', import_images: true do
         it 'should only work if #generate_products was previously called' do
           expect{publisher.import_images!}.to raise_error
         end
 
-        it 'should add images based off of the idea\'s mockups' do
+        it "should add images based off of the idea's mockups" do
           publisher.generate_products!
           publisher.import_images!
           
@@ -243,12 +243,21 @@ describe Spree::Mockbot::Idea, wip: true do
       end
 
       describe '#generate_variants!', variants: true do
+        let!(:red) { create :crm_color, name: 'Red', sku: '111' }
+        let!(:green) { create :crm_color, name: 'Green' }
+        let!(:blue) { create :crm_color, name: 'Blue' }
+        let!(:crm_imprintable) { create :crm_imprintable, style_name: 'Gildan 5000', sku: '5555' }
+        let!(:other_crm_imprintable) { create :crm_imprintable, style_name: 'American Apparel Standard or whatever', sku: '6666' }
+
+        let(:small) { create :crm_size_small, sku: '77' }
+        let(:medium) { create :crm_size_medium, sku: '44' }
+
         it 'should only work if #gather_sizing_data was previously called' do
           publisher.instance_variable_set(:@next_step, :import_images)
           expect{publisher.generate_variants!}.to raise_error
         end
 
-        it 'should create variants for @products, based on the data in @sizes with appropriate skus' do
+        it 'should create variants for @products, based on the data in @sizes' do
           publisher.generate_products!
           publisher.instance_variable_set(:@next_step, :gather_sizing_data)
           publisher.gather_sizing_data!
@@ -261,7 +270,6 @@ describe Spree::Mockbot::Idea, wip: true do
           products.each do |product|
             expect(product.variants.count).to eq 4 # 2 imprintables times 2 sizes (times 1 color for now), as per factories / endpoint actions
           end
-          expect(Spree::Variant.where(is_master: false).map(&:sku)).to include "0-#{idea.sku}-0123401001"
         end
 
         it 'should create the relevant option types and option values' do
@@ -301,15 +309,45 @@ describe Spree::Mockbot::Idea, wip: true do
             expect(styles).to include "t_shirt"
           end
         end
-      end
 
-      describe '#assign_skus!' do
+        it 'should format the sku using sku version 0' do
+          2.times {idea.colors.pop}
+          idea.imprintables.pop
+
+          expect(idea.colors.map(&:name)).to eq ['Red']
+          expect(idea.imprintables.first.name).to eq 'Gildan 5000'
+
+          idea.colors.first.sku = '111'
+
+          publisher.generate_products!
+          expect(Spree::Product.count).to eq 1
+          product = Spree::Product.first
+
+          publisher.instance_variable_set :@sizes, {
+            'Red' => {
+              idea.imprintables.first.name => [small, medium],
+            }
+          }
+          idea.imprintables.first.sku = "5555"
+
+          publisher.instance_variable_set(:@next_step, :generate_variants)
+          publisher.generate_variants!
+          expect(product.variants.count).to eq 2
+
+          expect(product.variants.has_option('apparel-size', 'small').count).to eq 1
+          product.variants.has_option('apparel-size', 'small').first.tap do |small|
+            expect(small.sku).to eq "0-#{idea.sku}-x555577111"
+          end
+          product.variants.has_option('apparel-size', 'medium').first.tap do |medium|
+            expect(medium.sku).to eq "0-#{idea.sku}-x555544111"
+          end
+        end
+
         it 'should assign the sku to the master variants of the products' do
           publisher.generate_products!
           publisher.instance_variable_set(:@next_step, :gather_sizing_data)
           publisher.gather_sizing_data!
           publisher.generate_variants!
-          publisher.assign_skus!
 
           Spree::Product.all.map(&:master).each do |master_variant|
             expect(master_variant.sku).to eq idea.sku

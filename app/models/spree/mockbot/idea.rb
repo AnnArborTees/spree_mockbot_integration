@@ -83,7 +83,7 @@ module Spree
         step :import_images, next: :gather_sizing_data do
           @products.values.each do |product|
             failed = @idea.copy_images_to product
-            report [product, failed], !failed.empty?
+            report [product, failed], failed.empty?
           end
 
           okay.each do |product_images|
@@ -92,14 +92,19 @@ module Spree
             product.log_update "Successfully added #{product.images.count} images from idea #{@idea.sku}."
           end
           on_error do |bad, good|
+            error_messages = []
             bad.each do |product, images|
               product.log_update "ERROR: Failed to add #{images.count} images from idea #{@idea.sku}: #{images.map{|i| i.errors.full_messages.join(',')}}."
+              error_messages += images.map(&:errors).map(&:full_messages)
+              error_messages.flatten!
+              error_messages.uniq!
             end
             if good.empty?
-              "Failed to import any images from idea #{@idea.sku}."
+              "Failed to import any images from idea #{@idea.sku}. "
             else
-              "Failed to import some images from idea #{@idea.sku}. Products affected: #{@products.values.map(&:slug).join(', ')}."
-            end
+              "Failed to import some images from idea #{@idea.sku}. Products affected: #{@products.values.map(&:slug).join(', ')}. "
+            end +
+            "Errors include: #{error_messages.join(', ')}"
           end
         end
 
@@ -142,6 +147,7 @@ module Spree
 
           @products.each do |color_name, product|
             product.variants.destroy_all
+            product.master.sku = @idea.sku
 
             [size_type, color_type, style_type].each do |type|
               product.option_types << type unless product.option_types.include? type
@@ -157,6 +163,12 @@ module Spree
                 size_values[size.name] ||= option_value size_type, size.name
 
                 variant = Spree::Variant.new
+                begin
+                  variant.sku = SpreeMockbotIntegration::Sku.build(
+                    0, @idea, imprintable_name, size, color_name)
+                rescue
+                  errored << variant
+                end
 
                 product.variants << variant
 
@@ -178,27 +190,21 @@ module Spree
           end
 
           on_error do |bad, good|
-            products = ->(r) { r.is_a? Product }
-            bad_products = bad.filter(&products)
-            bad_options  = bad.reject(&products)
+            is = ->(t,r) { r.is_a? t }.curry
+            bad_products = bad.filter(&is[Product])
+            bad_options  = bad.filter(&is[OptionValue]) + bad.filter(&is[OptionType])
+            bad_variants = bad.filter(&is[Variant])
             
             msg = ""
-            unless bad_products.count.empty?
+            unless bad_products.empty?
               msg += "#{bad_products.count} products became invalid. "
             end
-            unless bad_options.count.empty?
-              msg += "Failed to create #{bad_options.count} variant options: #{bad_options.map { |e| "#{e.class.name}: e.attributes" }.join(', ')}. "
+            unless bad_variants.empty?
+              msg += "Errors occurred while assigning #{bad_variants.count} variant skus. "
             end
-          end
-        end
-
-        step :assign_skus do
-          @products.each do |color_name, product|
-            
-          end
-
-          on_error do |good, bad|
-            
+            unless bad_options.empty?
+              msg += "Failed to create #{bad_options.count} variant options/types: #{bad_options.map { |e| "#{e.class.name}: e.attributes" }.join(', ')}. "
+            end
           end
         end
 

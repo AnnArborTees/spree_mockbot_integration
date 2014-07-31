@@ -83,6 +83,10 @@ class EndpointActions
                 [{ id: 2, name: 'Medium', sku: '02' }, { id: 3, name: 'Large', sku: '03' }]
               end
             }
+          elsif query['find']
+            response = supr.call
+            response[:body] = response[:body].select { |r| r['name'].downcase == query['find'].downcase }
+            response
           else
             supr.call
           end
@@ -93,6 +97,66 @@ class EndpointActions
         end
 
       end # config.before :suite
+    end
+
+    def mock_for_colors(config, options={})
+      color_stub = Endpoint::Stub.create_for Spree::Crm::Color
+
+      expected_email = options[:email]
+      expected_token = options[:token]
+      # config.before messes up the context, so we encapsulate our authenticate
+      # method here.
+      auth = method(:authenticate).to_proc.curry['Crm']
+
+      config.before :suite do
+
+        # Allow us to grab colors by name
+        color_stub.override_response :get, '.json' do |request, params, stub, &supr|
+          query = request.uri.query_values
+          if query['find']
+            response = supr.call
+            response[:body] = response[:body].select { |r| r['name'].downcase == query['find'].downcase }
+            response
+          else
+            supr.call
+          end
+        end
+
+        color_stub.override_all do |request, params, stub, &rsuper|
+          auth.call request, expected_email, expected_token, &rsuper
+        end
+
+      end
+    end
+
+    def mock_for_imprintables(config, options={})
+      imprintable_stub = Endpoint::Stub.create_for Spree::Crm::Imprintable
+
+      expected_email = options[:email]
+      expected_token = options[:token]
+      # config.before messes up the context, so we encapsulate our authenticate
+      # method here.
+      auth = method(:authenticate).to_proc.curry['Crm']
+
+      config.before :suite do
+
+        # Allow us to grab imprintables by name ( TODO change from name to whatever else )
+        imprintable_stub.override_response :get, '.json' do |request, params, stub, &supr|
+          query = request.uri.query_values
+          if query['find']
+            response = supr.call
+            response[:body] = response[:body].select { |r| r['style_name'].downcase == query['find'].downcase }
+            response
+          else
+            supr.call
+          end
+        end
+
+        imprintable_stub.override_all do |request, params, stub, &rsuper|
+          auth.call request, expected_email, expected_token, &rsuper
+        end
+
+      end
     end
 
     private

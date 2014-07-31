@@ -81,8 +81,11 @@ RSpec.configure do |config|
     WebMock.disable_net_connect! allow_localhost: true
   end
 
-  EndpointActions.mock_for_ideas config, email: 'test@test.com',    token: 'AbC123'
-  EndpointActions.mock_for_sizes config, email: 'test@testcrm.com', token: 'zYx987'
+  EndpointActions.mock_for_ideas(config, email: 'test@test.com', token: 'AbC123')
+  crm_args = [config, email: 'test@testcrm.com', token: 'zYx987']
+  EndpointActions.mock_for_sizes(*crm_args)
+  EndpointActions.mock_for_colors(*crm_args)
+  EndpointActions.mock_for_imprintables(*crm_args)
   # COMING SOON:
   # EndpointActions.mock_for_imprintables
 
