@@ -77,10 +77,10 @@ class EndpointActions
                 if query['color'] == 'Blue'
                   [{ id: 3, name: 'Large', sku: '03' }, { id: 4, name: 'Extra Large', sku: '04' }]
                 else
-                  [{ id: 1, name: 'Small', sku: '01' }, { id: 2, name: 'Medium', sku: '02' }]
+                  [{ id: 1, name: 'Small', sku: '77' }, { id: 2, name: 'Medium', sku: '44' }]
                 end
               else
-                [{ id: 2, name: 'Medium', sku: '02' }, { id: 3, name: 'Large', sku: '03' }]
+                [{ id: 2, name: 'Medium', sku: '44' }, { id: 3, name: 'Large', sku: '03' }]
               end
             }
           elsif query['find']

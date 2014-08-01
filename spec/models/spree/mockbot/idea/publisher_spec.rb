@@ -16,11 +16,10 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
     
     before(:each) { WebMockApi.stub_test_image! }
 
-    it 'should respond to the 4 publishing steps: generate_products, import_images, gather_sizing_data, generate_variants' do
+    it 'should respond to the 3 publishing steps: generate_products, import_images, generate_variants' do
       idea.publish.tap do |publisher|
         expect(publisher).to respond_to :generate_products!
         expect(publisher).to respond_to :import_images!
-        expect(publisher).to respond_to :gather_sizing_data!
         expect(publisher).to respond_to :generate_variants!
       end
     end
@@ -86,38 +85,10 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
       it 'should filter the images based on color', 
         pending: "Figure out how to do this from actual Mockbot data"
 
-      it 'should set the next step to gather_sizing_data' do
-        publisher.generate_products!
-        publisher.import_images!
-        expect(publisher.next_step).to eq :gather_sizing_data
-      end
-    end
-
-    describe '#gather_sizing_data!' do
-      it 'should only work if #import_images was previously called' do
-        publisher.generate_products!
-        expect{publisher.gather_sizing_data!}.to raise_error
-      end
-
       it 'should set the next step to generate_variants' do
         publisher.generate_products!
         publisher.import_images!
-        publisher.gather_sizing_data!
         expect(publisher.next_step).to eq :generate_variants
-      end
-
-      it 'should assign a hash in the format of sizes[color name][imprintable name] -> array of crm sizes' do
-        publisher.instance_variable_set(:@next_step, :gather_sizing_data)
-        publisher.gather_sizing_data!
-
-        publisher.instance_variable_get(:@sizes).tap do |sizes|
-          expect(sizes).to be_a Hash
-          expect(sizes['Blue']).to be_a Hash
-          expect(sizes['Blue']['Gildan 5000']).to be_a ActiveResource::Collection
-          expect(sizes['Blue']['Gildan 5000'].map(&:name)).to include 'Large'
-          expect(sizes['Blue']['Gildan 5000'].map(&:name)).to include 'Extra Large'
-          expect(sizes['Red']['American Apparel Standard or whatever'].map(&:name)).to include 'Medium'
-        end
       end
     end
 
@@ -128,18 +99,12 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
       let!(:crm_imprintable) { create :crm_imprintable, style_name: 'Gildan 5000', sku: '5555' }
       let!(:other_crm_imprintable) { create :crm_imprintable, style_name: 'American Apparel Standard or whatever', sku: '6666' }
 
-      let(:small) { create :crm_size_small, sku: '77' }
-      let(:medium) { create :crm_size_medium, sku: '44' }
-
-      it 'should only work if #gather_sizing_data was previously called' do
-        publisher.instance_variable_set(:@next_step, :import_images)
-        expect{publisher.generate_variants!}.to raise_error
-      end
+      let!(:small) { create :crm_size_small, sku: '77' }
+      let!(:medium) { create :crm_size_medium, sku: '44' }
 
       it 'should create variants for @products, based on the data in @sizes' do
         publisher.generate_products!
-        publisher.instance_variable_set(:@next_step, :gather_sizing_data)
-        publisher.gather_sizing_data!
+        publisher.instance_variable_set(:@next_step, :generate_variants)
         publisher.generate_variants!
 
         products = publisher.instance_variable_get(:@products).values
@@ -153,8 +118,7 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
 
       it 'should create the relevant option types and option values' do
         publisher.generate_products!
-        publisher.instance_variable_set(:@next_step, :gather_sizing_data)
-        publisher.gather_sizing_data!
+        publisher.instance_variable_set(:@next_step, :generate_variants)
         publisher.generate_variants!
 
         size_type  = Spree::OptionType.where(name: 'apparel-size')
@@ -217,6 +181,7 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
         product.variants.has_option('apparel-size', 'small').first.tap do |small|
           expect(small.sku).to eq "0-#{idea.sku}-x555577111"
         end
+        expect(product.variants.has_option('apparel-size', 'medium').count).to eq 1
         product.variants.has_option('apparel-size', 'medium').first.tap do |medium|
           expect(medium.sku).to eq "0-#{idea.sku}-x555544111"
         end
@@ -224,8 +189,7 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
 
       it 'should assign the idea sku directly to the master variants of the products' do
         publisher.generate_products!
-        publisher.instance_variable_set(:@next_step, :gather_sizing_data)
-        publisher.gather_sizing_data!
+        publisher.instance_variable_set(:@next_step, :generate_variants)
         publisher.generate_variants!
 
         Spree::Product.all.map(&:master).each do |master_variant|

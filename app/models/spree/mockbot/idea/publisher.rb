@@ -107,7 +107,7 @@ module Spree
           end
         end
 
-        step :import_images, next: :gather_sizing_data do
+        step :import_images, next: :generate_variants do
           @products.values.each do |product|
             failed = @idea.copy_images_to product
             report [product, failed], failed.empty?
@@ -135,32 +135,6 @@ module Spree
           end
         end
 
-        step :gather_sizing_data, next: :generate_variants do
-          @sizes = {}
-
-          @idea.colors.each do |color|
-
-            @sizes[color.name] = {}.tap do |imprintable_sizes_by_color|
-
-              @idea.imprintables.each do |imprintable|
-                begin
-                  imprintable_sizes_by_color[imprintable.name] = 
-                    Spree::Crm::Size.all params: {
-                      imprintable: imprintable.name,
-                            color: color.name
-                    }
-                rescue e => StandardError
-                  errored << e
-                end
-              end
-            end
-          end
-
-          on_error do
-            "Failed to gather sizing data from the SoftWear CRM."
-          end
-        end
-
         step :generate_variants do
           size_type  = option_type 'apparel-size', 'Size'
           color_type = option_type 'apparel-color', 'Color'
@@ -181,8 +155,12 @@ module Spree
             end
             color_values[color_name]         ||= option_value color_type, color_name
 
-            @sizes[color_name].each do |imprintable_name, sizes|
-              imprintable = @idea.imprintables.find { |i| i.name == imprintable_name }
+            @idea.imprintables.each do |imprintable|
+              imprintable_name = imprintable.name
+              sizes = Spree::Crm::Size.all params: {
+                imprintable: imprintable.name,
+                      color: color_name
+              }
 
               style_values[imprintable_name] ||= option_value style_type, imprintable.common_name
 
