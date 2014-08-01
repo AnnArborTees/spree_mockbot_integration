@@ -4,30 +4,26 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
   let!(:idea) { create :mockbot_idea_with_images }
   subject(:subject) { idea }
 
-  it 'should return an idea publisher' do
-    expect(subject.publish).to be_a Spree::Mockbot::Idea::Publisher
-  end
-
   describe 'Publisher' do
     let!(:size_small) { create :crm_size_small }
     let!(:size_medium) { create :crm_size_medium }
     let!(:size_large) { create :crm_size_large }
-    let(:publisher) { idea.publish }
+    let(:publisher) { Spree::Mockbot::Idea::Publisher }
     
     before(:each) { WebMockApi.stub_test_image! }
 
     it 'should respond to the 3 publishing steps: generate_products, import_images, generate_variants' do
-      idea.publish.tap do |publisher|
-        expect(publisher).to respond_to :generate_products!
-        expect(publisher).to respond_to :import_images!
-        expect(publisher).to respond_to :generate_variants!
+      Spree::Mockbot::Idea::Publisher.tap do |publisher|
+        expect(publisher).to respond_to :generate_products
+        expect(publisher).to respond_to :import_images
+        expect(publisher).to respond_to :generate_variants
       end
     end
 
-    describe '#generate_products!' do
+    describe '#generate_products' do
       it 'should create one product for each color from the idea' do
         expect(Spree::Product.count).to eq 0
-        publisher.generate_products!
+        publisher.generate_products(idea)
         expect(Spree::Product.count).to eq 3
 
         ['red', 'blue', 'green'].each do |color|
@@ -45,13 +41,14 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
 
         it "should only create products if they don't already exist" do
           expect(Spree::Product.count).to eq 1
-          publisher.generate_products!
+          publisher.generate_products(idea)
           expect(Spree::Product.count).to eq 3
         end
       end
 
-      it 'should assign @products to a hash in the format of products[color.name] -> product id' do
-        publisher.generate_products!
+      it 'should assign @products to a hash in the format of products[color.name] -> product id', 
+        pending: 'No more state :(' do
+        publisher.generate_products(idea)
 
         publisher.instance_variable_get(:@products).tap do |products|
           expect(products).to be_a Hash
@@ -62,38 +59,23 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
           expect(Spree::Product.where(id: products.values.first)).to exist
         end
       end
-
-      it 'should set the next step to import_images' do
-        publisher.generate_products!
-        expect(publisher.next_step).to eq :import_images
-      end
     end
 
-    describe '#import_images!', import_images: true do
-      it 'should only work if #generate_products was previously called' do
-        expect{publisher.import_images!}.to raise_error
-      end
-
+    describe '#import_images', import_images: true do
       it "should add images based off of the idea's mockups" do
-        publisher.generate_products!
-        publisher.import_images!
+        publisher.generate_products(idea)
+        publisher.import_images(idea)
         
-        publisher.instance_variable_get(:@products).values.each do |product|
-          expect(Spree::Product.find(product).images.count).to eq 2
+        idea.associated_spree_products.each do |product|
+          expect(product.images.count).to eq 2
         end
       end
 
       it 'should filter the images based on color', 
         pending: "Figure out how to do this from actual Mockbot data"
-
-      it 'should set the next step to generate_variants' do
-        publisher.generate_products!
-        publisher.import_images!
-        expect(publisher.next_step).to eq :generate_variants
-      end
     end
 
-    describe '#generate_variants!', variants: true do
+    describe '#generate_variants', variants: true do
       let!(:red) { create :crm_color, name: 'Red', sku: '111' }
       let!(:green) { create :crm_color, name: 'Green' }
       let!(:blue) { create :crm_color, name: 'Blue' }
@@ -103,24 +85,22 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
       let!(:small) { create :crm_size_small, sku: '77' }
       let!(:medium) { create :crm_size_medium, sku: '44' }
 
-      it 'should create variants for @products, based on the data in @sizes' do
-        publisher.generate_products!
-        publisher.instance_variable_set(:@next_step, :generate_variants)
-        publisher.generate_variants!
+      it "should create variants for the idea's products, based on the data in @sizes" do
+        publisher.generate_products(idea)
+        publisher.generate_variants(idea)
 
-        products = publisher.instance_variable_get(:@products).values
+        products = idea.associated_spree_products
         expect(products).to_not be_nil
         expect(products).to_not be_empty
 
         products.each do |product|
-          expect(Spree::Product.find(product).variants.count).to eq 4 # 2 imprintables times 2 sizes (times 1 color for now), as per factories / endpoint actions
+          expect(product.variants.count).to eq 4 # 2 imprintables times 2 sizes (times 1 color for now), as per factories / endpoint actions
         end
       end
 
       it 'should create the relevant option types and option values' do
-        publisher.generate_products!
-        publisher.instance_variable_set(:@next_step, :generate_variants)
-        publisher.generate_variants!
+        publisher.generate_products(idea)
+        publisher.generate_variants(idea)
 
         size_type  = Spree::OptionType.where(name: 'apparel-size')
         color_type = Spree::OptionType.where(name: 'apparel-color')
@@ -149,8 +129,8 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
         end
 
         style_type.first.option_values.map(&:name).tap do |styles|
-          expect(styles).to include "unisex"
-          expect(styles).to include "t_shirt"
+          expect(styles).to include "gildan 5000"
+          expect(styles).to include "american apparel standard or whatever"
         end
       end
 
@@ -163,19 +143,13 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
 
         idea.colors.first.sku = '111'
 
-        publisher.generate_products!
+        publisher.generate_products(idea)
         expect(Spree::Product.count).to eq 1
         product = Spree::Product.first
 
-        publisher.instance_variable_set :@sizes, {
-          'Red' => {
-            idea.imprintables.first.name => [small, medium],
-          }
-        }
         idea.imprintables.first.sku = "5555"
 
-        publisher.instance_variable_set(:@next_step, :generate_variants)
-        publisher.generate_variants!
+        publisher.generate_variants(idea)
         expect(product.variants.count).to eq 2
 
         expect(product.variants.has_option('apparel-size', 'small').count).to eq 1
@@ -189,9 +163,8 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
       end
 
       it 'should assign the idea sku directly to the master variants of the products' do
-        publisher.generate_products!
-        publisher.instance_variable_set(:@next_step, :generate_variants)
-        publisher.generate_variants!
+        publisher.generate_products(idea)
+        publisher.generate_variants(idea)
 
         Spree::Product.all.map(&:master).each do |master_variant|
           expect(master_variant.sku).to eq idea.sku
