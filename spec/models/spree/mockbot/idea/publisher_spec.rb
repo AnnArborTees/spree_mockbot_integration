@@ -50,7 +50,7 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
         end
       end
 
-      it 'should assign @products to a hash in the format of products[color.name] -> product' do
+      it 'should assign @products to a hash in the format of products[color.name] -> product id' do
         publisher.generate_products!
 
         publisher.instance_variable_get(:@products).tap do |products|
@@ -58,7 +58,8 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
           expect(products.keys).to include 'Red'
           expect(products.keys).to include 'Blue'
           expect(products.keys).to include 'Green'
-          expect(products.values.first).to be_a Spree::Product
+          expect(products.values.first).to be_a Fixnum
+          expect(Spree::Product.where(id: products.values.first)).to exist
         end
       end
 
@@ -78,7 +79,7 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
         publisher.import_images!
         
         publisher.instance_variable_get(:@products).values.each do |product|
-          expect(product.images.count).to eq 2
+          expect(Spree::Product.find(product).images.count).to eq 2
         end
       end
 
@@ -112,7 +113,7 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
         expect(products).to_not be_empty
 
         products.each do |product|
-          expect(product.variants.count).to eq 4 # 2 imprintables times 2 sizes (times 1 color for now), as per factories / endpoint actions
+          expect(Spree::Product.find(product).variants.count).to eq 4 # 2 imprintables times 2 sizes (times 1 color for now), as per factories / endpoint actions
         end
       end
 

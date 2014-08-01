@@ -91,7 +91,7 @@ module Spree
             @idea.assign_sku_to product
             product.save if report product, product.valid?
 
-            @products[color.name] = product
+            @products[color.name] = product.id
           end
 
           okay.each do |product|
@@ -108,7 +108,8 @@ module Spree
         end
 
         step :import_images, next: :generate_variants do
-          @products.values.each do |product|
+          @products.values.each do |product_id|
+            product = Product.find(product_id)
             failed = @idea.copy_images_to product
             report [product, failed], failed.empty?
           end
@@ -146,7 +147,9 @@ module Spree
           color_values = {}
           style_values = {}
 
-          @products.each do |color_name, product|
+          @products.each do |color_name, product_id|
+            product = Product.find(product_id)
+            
             product.variants.destroy_all
             product.master.sku = @idea.sku
 
