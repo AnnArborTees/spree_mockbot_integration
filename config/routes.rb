@@ -2,7 +2,8 @@ Spree::Core::Engine.routes.draw do
   namespace :admin do
     namespace :mockbot do
       resources :ideas do
-        post '/publish', to: 'ideas#publish', as: :publish
+        get '/publish', to: 'ideas#publish_progress'
+        post '/publish', to: 'ideas#publish'
       end
     end
     get '/api_settings', to: 'api_settings#edit', as: :api_settings

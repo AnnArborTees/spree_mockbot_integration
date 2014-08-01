@@ -29,16 +29,31 @@ module Spree
           @idea = Spree::Mockbot::Idea.find(params[:id])
         end
 
+        def publish_progress
+          @idea = Spree::Mockbot::Idea.find(params[:idea_id])
+          @publisher = session[:publisher]
+
+          render :publish
+        end
+
         def publish
           @idea = Spree::Mockbot::Idea.find(params[:idea_id])
-          begin
-            @idea.publish!
-            flash[:success] = "Successfully published #{@idea.sku}!"
-          rescue Spree::Mockbot::Idea::PublishError => e
-            @publish_error = true
-            flash[:error] = e.to_s
+          # begin
+          #   @idea.publish!
+          #   flash[:success] = "Successfully published #{@idea.sku}!"
+          # rescue Spree::Mockbot::Idea::PublishError => e
+          #   @publish_error = true
+          #   flash[:error] = e.to_s
+          # end
+          # redirect_to action: :index
+
+          @publisher = session[:publisher]
+          if @publisher
+            @publisher.next_step!
+          else
+            @publisher = @idea.publish
+            session[:publisher] = @publisher
           end
-          redirect_to action: :index
         end
 
         private
