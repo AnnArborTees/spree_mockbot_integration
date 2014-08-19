@@ -9,7 +9,10 @@ module Spree
       self.collection_parser = ::ActiveResourcePagination::PaginatedCollection
       
       def associated_spree_products
-        Spree::Product.where(spree_variants: {sku: self.sku}).joins(:master).readonly(false)
+        Spree::Product
+          .where(spree_variants: {sku: self.sku})
+          .joins(:master)
+          .readonly(false)
       end
 
       def all_images
@@ -52,7 +55,7 @@ module Spree
         product.images.destroy_all
 
         failed = []
-        copy = ->(mockup, is_thumbnail) do
+        copy = lambda do |is_thumbnail, mockup|
           image = Spree::Image.new
           image.attachment = open mockup_url mockup
           image.position = is_thumbnail ? 0 : product.images.count
@@ -62,9 +65,10 @@ module Spree
           image.save
           failed << image unless image.valid?
         end
+          .curry
 
-        mockups.each    { |m| copy[m, false] }
-        thumbnails.each { |t| copy[t, true] }
+        mockups.each(&copy[false])
+        thumbnails.each(&copy[true])
         return failed
       end
 

@@ -3,7 +3,7 @@
 <% end %>
 
 <div class='row'>
-  <% Spree::Mockbot::Idea::Publisher.steps.each_with_index do |step, i| %>
+  <% Spree::Mockbot::Idea::Publisher.steps.each do |step, i| %>
     <div id='publish-step-<%=i+1%>' class='publish-step alpha three columns <%= @publisher && @publisher.next_step == step ? '' : 'inactive' %>'>
       <i class='icon-play'></i>
       <div class='publish-content'>

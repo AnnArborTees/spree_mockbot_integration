@@ -13,6 +13,8 @@ module Spree
 
 
       class Publisher
+        @steps = :generate_products, :import_images, :generate_variants
+
         class << self
           private
             def step
@@ -31,6 +33,15 @@ module Spree
               end
             end
           public
+
+          attr_reader :steps
+          def step_after(step=nil)
+            if step
+              @steps[@steps.find_index(step)+1]
+            else
+              @steps.first
+            end
+          end
 
           def generate_products(idea)
             step do |report, on_error, okay|
@@ -177,10 +188,11 @@ module Spree
                 end
                 msg
               end
-            end # step do ...
+            end # step
           end # method
 
           private
+
           def ingify(str)
             str.to_s.humanize.downcase.gsub!(/(e )|( ){1}/, 'ing ')
           end
@@ -199,7 +211,7 @@ module Spree
           end
 
           def assure(clazz, conditions)
-            clazz.where(conditions).first or clazz.create(conditions) # TODO is this not actually creating????
+            clazz.where(conditions).first || clazz.create(conditions) # TODO is this not actually creating????
           end
         end
       end

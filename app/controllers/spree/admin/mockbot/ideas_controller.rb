@@ -29,31 +29,27 @@ module Spree
           @idea = Spree::Mockbot::Idea.find(params[:id])
         end
 
+
         def publish_progress
           @idea = Spree::Mockbot::Idea.find(params[:idea_id])
-          @publisher = session[:publisher]
 
           render :publish
         end
 
         def publish
-          @idea = Spree::Mockbot::Idea.find(params[:idea_id])
-          # begin
-          #   @idea.publish!
-          #   flash[:success] = "Successfully published #{@idea.sku}!"
-          # rescue Spree::Mockbot::Idea::PublishError => e
-          #   @publish_error = true
-          #   flash[:error] = e.to_s
-          # end
-          # redirect_to action: :index
+          params.permit(:step)
+          @idea = Idea.find(params[:idea_id])
 
-          @publisher = session[:publisher]
-          if @publisher
-            @publisher.next_step!
-          else
-            @publisher = @idea.publish
-            session[:publisher] = @publisher
-          end
+          @step = Idea::Publisher.step_after params[:step]
+
+          Idea::Publisher.send @step, @idea
+
+          # TODO MONDAY
+          # Alright... First of all, go to publish.html.erb and the css file
+          # and replace the whole 'inactive' class with an 'active' class
+          # that works inversely.
+          # Then, make sure the correct div is assigned the active class.
+          # Then... Dive back into feature specs unless I'm missing something.
         end
 
         private

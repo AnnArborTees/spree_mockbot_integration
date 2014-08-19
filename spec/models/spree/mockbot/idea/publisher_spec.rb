@@ -12,12 +12,21 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
     
     before(:each) { WebMockApi.stub_test_image! }
 
-    it 'should respond to the 3 publishing steps: generate_products, import_images, generate_variants' do
-      Spree::Mockbot::Idea::Publisher.tap do |publisher|
-        expect(publisher).to respond_to :generate_products
-        expect(publisher).to respond_to :import_images
-        expect(publisher).to respond_to :generate_variants
+    describe '.step_after' do
+      it 'should return the step that goes after the given step' do
+        Spree::Mockbot::Idea::Publisher.tap do |publisher|
+          expect(publisher.step_after).to eq :generate_products
+          expect(publisher.step_after :generate_products).to eq :import_images
+          expect(publisher.step_after(:import_images)).to eq :generate_variants
+          expect(publisher.step_after(:generate_variants)).to be_nil
+        end
       end
+    end
+
+    it 'responds to: generate_products, import_images, generate_variants' do
+      expect(publisher).to respond_to :generate_products
+      expect(publisher).to respond_to :import_images
+      expect(publisher).to respond_to :generate_variants
     end
 
     describe '#generate_products' do
@@ -76,11 +85,17 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
     end
 
     describe '#generate_variants', variants: true do
-      let!(:red) { create :crm_color, name: 'Red', sku: '111' }
+      let!(:red)   { create :crm_color, name: 'Red', sku: '111' }
       let!(:green) { create :crm_color, name: 'Green' }
-      let!(:blue) { create :crm_color, name: 'Blue' }
-      let!(:crm_imprintable) { create :crm_imprintable, style_name: 'Gildan 5000', sku: '5555' }
-      let!(:other_crm_imprintable) { create :crm_imprintable, style_name: 'American Apparel Standard or whatever', sku: '6666' }
+      let!(:blue)  { create :crm_color, name: 'Blue' }
+      let!(:crm_imprintable) do
+        create :crm_imprintable, style_name: 'Gildan 5000', sku: '5555'
+      end
+      let!(:other_crm_imprintable) do
+        create :crm_imprintable, 
+               style_name: 'American Apparel Standard or whatever',
+               sku: '6666'
+      end
 
       let!(:small) { create :crm_size_small, sku: '77' }
       let!(:medium) { create :crm_size_medium, sku: '44' }

@@ -8,7 +8,10 @@ module Spree
 
         def settings_class=(clazz)
           @settings_class = clazz
-          self.site = URI.parse(@settings_class.api_endpoint || "http://error-site.err")
+          
+          self.site = URI.parse(
+            @settings_class.api_endpoint || "http://error-site.err"
+          )
         end
 
         def authenticates_with_email_and_token
@@ -21,6 +24,7 @@ module Spree
         end
 
         private
+
         def settings_prefix
           raise "Must assign self.settings_class first" if settings_class.nil?
           settings_class.name.match(/\w+(?=Settings$)/)[0]
