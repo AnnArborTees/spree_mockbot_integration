@@ -3,5 +3,6 @@ Spree::Product.class_eval do
 
   def log_update(info)
     updates << Spree::Update.new(info: info)
+    info
   end
 end

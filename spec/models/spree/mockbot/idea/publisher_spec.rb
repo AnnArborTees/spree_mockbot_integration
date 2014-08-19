@@ -8,20 +8,9 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
     let!(:size_small) { create :crm_size_small }
     let!(:size_medium) { create :crm_size_medium }
     let!(:size_large) { create :crm_size_large }
-    let(:publisher) { Spree::Mockbot::Idea::Publisher }
+    let(:publisher) { Spree::Mockbot::Idea::Publisher.new }
     
     before(:each) { WebMockApi.stub_test_image! }
-
-    describe '.step_after' do
-      it 'should return the step that goes after the given step' do
-        Spree::Mockbot::Idea::Publisher.tap do |publisher|
-          expect(publisher.step_after).to eq :generate_products
-          expect(publisher.step_after :generate_products).to eq :import_images
-          expect(publisher.step_after(:import_images)).to eq :generate_variants
-          expect(publisher.step_after(:generate_variants)).to be_nil
-        end
-      end
-    end
 
     it 'responds to: generate_products, import_images, generate_variants' do
       expect(publisher).to respond_to :generate_products
@@ -113,13 +102,14 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
         end
       end
 
-      it 'should create the relevant option types and option values' do
+      it 'should create the relevant option types and option values', go: true do
         publisher.generate_products(idea)
         publisher.generate_variants(idea)
 
         size_type  = Spree::OptionType.where(name: 'apparel-size')
         color_type = Spree::OptionType.where(name: 'apparel-color')
         style_type = Spree::OptionType.where(name: 'apparel-style')
+        
         [size_type, color_type, style_type].each do |it|
           expect(it).to exist
         end

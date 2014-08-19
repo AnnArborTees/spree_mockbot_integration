@@ -15,6 +15,10 @@ module Spree
           .readonly(false)
       end
 
+      def product_of_color(color)
+        associated_spree_products.where(slug: product_slug(color)).first
+      end
+
       def all_images
         mockups.to_a + thumbnails.to_a
       end
@@ -93,6 +97,7 @@ module Spree
       end
 
       private
+
       def color_str(color)
         color.is_a?(String) ? color : color.name
       end
