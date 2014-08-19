@@ -5,11 +5,13 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
   subject(:subject) { idea }
 
   describe 'Publisher' do
-    let!(:size_small) { create :crm_size_small }
+    let!(:size_small)  { create :crm_size_small }
     let!(:size_medium) { create :crm_size_medium }
-    let!(:size_large) { create :crm_size_large }
+    let!(:size_large)  { create :crm_size_large }
     let(:publisher) { Spree::Mockbot::Idea::Publisher.new }
-    
+    let(:dummy_product) { create :custom_product, name: 'Dummy' }
+    let(:publish_error) { Spree::Mockbot::Idea::PublishError }
+
     before(:each) { WebMockApi.stub_test_image! }
 
     it 'responds to: generate_products, import_images, generate_variants' do
@@ -44,17 +46,12 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
         end
       end
 
-      it 'should assign @products to a hash in the format of products[color.name] -> product id', 
-        pending: 'No more state :(' do
-        publisher.generate_products(idea)
+      context 'when the product fails to save' do
+        before :each do
+          expect(dummy_product).to receive(:save).and_return false
+          expect(idea).to receive(:product_of_color).and_return dummy_product
 
-        publisher.instance_variable_get(:@products).tap do |products|
-          expect(products).to be_a Hash
-          expect(products.keys).to include 'Red'
-          expect(products.keys).to include 'Blue'
-          expect(products.keys).to include 'Green'
-          expect(products.values.first).to be_a Fixnum
-          expect(Spree::Product.where(id: products.values.first)).to exist
+          expect{publisher.generate_products(idea)}.to raise_error publish_error
         end
       end
     end
