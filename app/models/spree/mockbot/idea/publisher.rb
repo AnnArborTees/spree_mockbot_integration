@@ -21,7 +21,7 @@ module Spree
             idea.copy_to_product(product, color)
             idea.assign_sku_to product
 
-            raise_unless(product, :save, true) do
+            raise_if(product, !product.save, true) do
               "Failed to generate product for idea #{idea.sku}. "\
               "Product errors: #{product.errors.full_messages}"
             end
@@ -109,10 +109,6 @@ module Spree
           message = yield
           object.log_update "ERROR: #{message}" if log
           raise PublishError.new(object), message
-        end
-
-        def raise_unless(object, condition, log = false, &block)
-          raise_if(object, !condition, log, &block)
         end
 
         %w(size color style).each do |pre|
