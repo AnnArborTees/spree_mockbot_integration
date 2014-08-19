@@ -11,30 +11,28 @@ module Spree
         end
       end
 
-
       class Publisher
-        @steps = :generate_products, :import_images, :generate_variants
+        Step = Struct.new(:name, :description)
 
         class << self
-          private
-            def step
-              errored = []
-              okay    = []
-
-              error_message = ''
-
-              report   = ->(object, condition) { (condition ? okay : errored) << object; condition }
-              on_error = ->(&b) { unless errored.empty? then error_message = b.call(errored, okay) end }
-
-              yield report, on_error, okay
-
-              unless errored.empty?
-                raise PublishError.new(errored, okay), error_message
-              end
-            end
-          public
-
           attr_reader :steps
+
+          def step
+            @errored = []
+            @okay    = []
+            @in_step = true
+
+            yield
+
+            @in_step = false
+
+            unless @errored.empty?
+              raise PublishError.new(@errored, @okay), error_message
+            end
+          end
+
+          protected :step
+
           def step_after(step=nil)
             if step
               @steps[@steps.find_index(step)+1]
@@ -190,6 +188,15 @@ module Spree
               end
             end # step
           end # method
+
+          protected
+
+          attr_reader :errored
+          attr_reader :okay
+
+          # PUBLISHER IS BUSTED RIGHT NOW. WILL NOT WORK
+          # ONCE FINISHED WITH THE STEP MACHINE OR WHATEVER
+          # COME BACK AND FIX!
 
           private
 
