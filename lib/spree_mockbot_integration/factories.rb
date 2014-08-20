@@ -105,4 +105,10 @@ FactoryGirl.define do
       style_name 'Test Style'
     end
   end
+
+  FactoryGirl.define do
+    factory :mockbot_idea_publisher, class: Spree::Mockbot::Idea::Publisher do
+      current_step nil
+    end
+  end
 end

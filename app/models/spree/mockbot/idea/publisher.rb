@@ -9,62 +9,115 @@ module Spree
         end
       end
 
-      class Publisher
+      class Publisher < ActiveRecord::Base
+        self.table_name = 'spree_mockbot_idea_publishers'
+
         def self.steps
-          [:generate_products, :import_images, :generate_variants]
+          %w(generate_products import_images generate_variants)
         end
+
         def self.step_after(from)
           return steps.first unless from && steps.find_index(from)
           
           steps.slice steps.find_index(from) + 1
         end
 
-        def generate_products(idea)
+        has_many :completed_steps,
+                  class_name: 'Spree::Mockbot::Idea::Publisher::Step',
+                  dependent: :destroy
+
+        validates :idea_sku, presence: true
+        validates :current_step, inclusion: { in: steps + [nil, 'done'],
+                                 message: "unknown step '%{value}'." }
+
+        def idea
+          @idea ||= Spree::Mockbot::Idea.find(idea_sku)
+        end
+
+        def current_step=(step)
+          case step
+          when Fixnum then super(Publisher.steps[step])
+          else super
+          end
+        end
+
+        def generate_products
           raise_if(idea, idea.colors.empty?) { "Idea has no colors" }
+          
+          step :generate_products do
+            idea.colors.each do |color|
+              product = idea.product_of_color(color) || Spree::Product.new
 
-          idea.colors.each do |color|
-            product = idea.product_of_color(color) || Spree::Product.new
+              idea.copy_to_product(product, color)
+              idea.assign_sku_to product
 
-            idea.copy_to_product(product, color)
-            idea.assign_sku_to product
-
-            raise_if(product, !product.save, true) do
-              "Failed to generate product for idea #{idea.sku}. "\
-              "Product errors: #{product.errors.full_messages}"
+              raise_if(product, !product.valid?, true) do
+                "Failed to generate product for idea #{idea.sku}. "\
+                "Product errors: #{product.errors.full_messages}"
+              end
+              
+              product.save
             end
           end
         end
 
-        def import_images(idea)
-          idea.associated_spree_products.each do |product|
-            failed = idea.copy_images_to product
+        def import_images
+          step :import_images do
+            idea.associated_spree_products.each do |product|
+              failed = idea.copy_images_to product
 
-            raise_if(product, !failed.empty?, true) do
-              "Failed to import #{failed.size} images to product "\
-              "#{product.master.sku}"
+              raise_if(product, !failed.empty?, true) do
+                "Failed to import #{failed.size} images to product "\
+                "#{product.master.sku}"
+              end
             end
           end
         end
 
-        def generate_variants(idea)
-          idea.associated_spree_products.each do |product|
-            product_color = color_of_product(idea, product)
+        def generate_variants
+          step :generate_variants do
+            idea.associated_spree_products.each do |product|
+              product_color = color_of_product(idea, product)
 
-            product.variants.destroy_all
-            product.master.sku = idea.sku
+              product.variants.destroy_all
+              product.master.sku = idea.sku
 
-            each_option_type(&add_to_set(product.option_types))
+              each_option_type(&add_to_set(product.option_types))
 
-            idea.imprintables.each do |imprintable|
-              sizes = Spree::Crm::Size.all params: {
-                  imprintable: imprintable.name,
-                        color: product_color.name
-                }
+              idea.imprintables.each do |imprintable|
+                sizes = Spree::Crm::Size.all params: {
+                    imprintable: imprintable.name,
+                          color: product_color.name
+                  }
 
-              sizes.each(&curry(:add_variant).(idea, product, imprintable))
+                sizes.each(&curry(:add_variant).(idea, product, imprintable))
+              end
+
+              product.log_update "Added variants from idea #{idea.sku}"
             end
+          end
+        end
 
-            product.log_update "Added variants from idea #{idea.sku}"
+        def perform_step!
+          raise "Already done!" if current_step == 'done'
+
+          send(current_step)
+          current_step = step_after current_step
+          save
+          raise "Failed to advance to the next step!" unless valid?
+        end
+
+        protected
+
+        def step(str, &block)
+          self.current_step = str.to_s
+          save
+          raise errors.messages[:current_step] unless valid?
+
+          yield
+
+          unless completed_steps.where(name: current_step).exists?
+            completed_steps << Step.new(name: current_step)
           end
         end
 
