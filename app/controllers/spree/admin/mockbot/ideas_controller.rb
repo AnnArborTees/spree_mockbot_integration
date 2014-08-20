@@ -37,12 +37,20 @@ module Spree
         end
 
         def publish
-          params.permit(:step)
-          @idea = Idea.find(params[:idea_id])
+          params.permit(:step, :idea_id)
+          @idea = Spree::Mockbot::Idea.find(params[:idea_id])
+          @step = Spree::Mockbot::Idea::Publisher.step_after params[:step]
+          @step_number = Spree::Mockbot::Idea::Publisher.steps.find_index(@step)
 
-          @step = Idea::Publisher.step_after params[:step]
-
-          Idea::Publisher.send @step, @idea
+          if @step
+            begin
+              @idea.publish.send @step, @idea
+            rescue StandardError => e
+              @error = e
+            end
+          else
+            @complete = true
+          end
 
           # TODO -MONDAY-, EHEM, WEDNESDAY!
           # Alright... First of all, go to publish.html.erb and the css file

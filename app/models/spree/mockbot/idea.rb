@@ -35,22 +35,21 @@ module Spree
       end
 
       def copy_to_product(product, color)
-        product.name = product_name(color)
-        product.description = description
-        product.slug = product_slug(color)
-        product.price = base_price
+        product.name        = product_name(color)
+        product.description = description || working_description
+        product.slug        = product_slug(color)
+        product.price       = base_price
         product.meta_description = meta_description
-        product.meta_keywords = meta_keywords
+        product.meta_keywords    = meta_keywords
 
-        product.shipping_category_id = 
-          (Spree::ShippingCategory.where(name: shipping_category).first or
-           Spree::ShippingCategory.create(name: shipping_category)
-          ).id
+        assure_category = lambda do |clazz, attrs|
+          (clazz.where(attrs).first || clazz.create(attrs)).id
+        end
 
-        product.tax_category_id = 
-          (Spree::TaxCategory.where(name: tax_category).first or
-           Spree::TaxCategory.create(name: tax_category)
-          ).id
+        product.shipping_category_id = assure_category
+          .(Spree::ShippingCategory, name: shipping_category)
+        product.tax_category_id = assure_category
+          .(Spree::TaxCategory, name: tax_category)
 
         return product
       end
@@ -60,10 +59,10 @@ module Spree
 
         failed = []
         copy = lambda do |is_thumbnail, mockup|
-          image = Spree::Image.new
+          image            = Spree::Image.new
           image.attachment = open mockup_url mockup
-          image.position = is_thumbnail ? 0 : product.images.count
-          image.alt = mockup.description
+          image.position   = is_thumbnail ? 0 : product.images.count
+          image.alt        = mockup.description
 
           product.images << image
           image.save
@@ -77,7 +76,7 @@ module Spree
       end
 
       def publish
-        Publisher.new(self)
+        Publisher.new
       end
 
       def publish!(ignore_errors=false)

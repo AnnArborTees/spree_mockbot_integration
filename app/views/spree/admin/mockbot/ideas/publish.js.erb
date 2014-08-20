@@ -1,24 +1,27 @@
-<% if @publisher %>
-  $('#start-publish').remove();
-  <% if @publisher.done? %>
+$('#start-publish').hide();
+<% if @error %>
+  alert('GOD WHY. STEP <%= @step %>');
+  alert("<%=j @error.inspect %>")
+<% elsif @complete %>
+  $('.publish-step').removeClass('inactive');
+  $('#publish-step-done').addClass('active');
+<% else %>
+  var $previous = $('#publish-step-<%= @step_number-1 %>');
+  var $next     = $('#publish-step-<%= @step_number %>');
 
-  <% else %>
-    var $previous = $('#publish-step-<%= @publisher.step_number-1 %>');
-    var $next     = $('#publish-step-<%= @publisher.step_number %>');
+  if ($previous.length) $previous.removeClass('active');
+  if ($next.length)     $next.addClass('inactive');
 
-    if ($previous.length) $previous.addClass('inactive');
-    if ($next.length)     $next.removeClass('inactive');
+  $.ajax({
+    url: "<%=j spree.admin_mockbot_idea_publish_path(@idea.sku) %>",
+    type: 'POST',
+    data: { step: "<%=j @step %>" },
+    dataType: 'script'
+  })
 
-    $.ajax({
-      url: "<%= escape_javascript spree.admin_mockbot_idea_publish_path(@idea.sku) %>",
-      type: 'POST',
-      dataType: 'script'
-    })
+    .done(eval)
 
-      .done(eval)
-
-      .fail(function (jqXHR, textStatus) {
-        alert('Server error, oh noooooooo');
-      });
-  <% end %>
+    .fail(function (jqXHR, textStatus) {
+      alert('Server error, oh noooooooo');
+    });
 <% end %>

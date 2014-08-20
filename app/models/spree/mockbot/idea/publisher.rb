@@ -10,7 +10,14 @@ module Spree
       end
 
       class Publisher
-        Step = Struct.new(:name, :description)
+        def self.steps
+          [:generate_products, :import_images, :generate_variants]
+        end
+        def self.step_after(from)
+          return steps.first unless from
+          
+          steps.slice steps.find_index(from) + 1
+        end
 
         def generate_products(idea)
           raise_if(idea, idea.colors.empty?) { "Idea has no colors" }
