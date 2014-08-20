@@ -2,101 +2,34 @@ class EndpointActions
   class << self
     attr_accessor :do_authentication
 
-    ##
     # The API::IdeasController in MockBot has some special functionality
     # that is mimicked here.
     def mock_for_ideas(config, options={})
       idea_stub = Endpoint::Stub.create_for Spree::Mockbot::Idea
       expected_email = options[:email]
       expected_token = options[:token]
-      # config.before messes up the context, so we encapsulate our authenticate
-      # method here.
-      auth = method(:authenticate).to_proc.curry['Mockbot']
 
-      config.before :suite do
-        # Overwrite default index to add pagination headers, 
-        # sort by sku, and perform searches.
-        idea_stub.mock_response :get, '.json' do |request, params, stub|
-          query = request.uri.query_values
-          records = stub.records.dup
+      auth = method(:authenticate).to_proc.curry.(
+        'Mockbot', expected_email, expected_token
+      )
 
-          # Sorta simulate SQL 'LIKE' predicate.
-          records.select! { |r| 
-            ['sku', 'working_name', 'product_name'].any? { |n| 
-              r[n] && r[n].downcase.include?(query['search'].downcase) } } if query && query['search']
-
-          {
-            body: records.sort_by { |r| r && r[:sku] },
-            headers: {
-              'Pagination-Limit' => 100,
-              'Pagination-Offset' => 0,
-              'Pagination-TotalCount' => stub.records.compact.count
-            }
-          }
-        end
-
-        # Overwrite default find to find by sku instead of id.
-        idea_stub.override_response :get, '/:id.json' do |request, params, stub, &rsuper|
-          id = stub.records.find_index { |r| r and r[:sku] == params[:id] }
-          params[:id] = id
-          rsuper.call request, {id: id}
-        end
-
-        # Update also...
-        idea_stub.override_response :put, '/:id.json' do |request, params, stub, &rsuper|
-          id = stub.records.find_index { |r| r and r[:sku] == params[:id] }
-          params[:id] = id
-          rsuper.call request, {id: id}
-        end
-
-        # And add authentication
-        idea_stub.override_all do |request, params, stub, &rsuper|
-          auth.call request, expected_email, expected_token, &rsuper
-        end
-      end # config.before :suite
+      idea_stub.mock_response(:get, '.json', &method(:idea_index))
+      idea_stub.override_response(:get, '/:id.json', &method(:idea_show))
+      idea_stub.override_response(:put, '/:id.json', &method(:idea_show))
+      idea_stub.override_all(&to_authenticate_with(auth))
     end
 
     def mock_for_sizes(config, options={})
       size_stub = Endpoint::Stub.create_for Spree::Crm::Size
       expected_email = options[:email]
       expected_token = options[:token]
-      # config.before messes up the context, so we encapsulate our authenticate
-      # method here.
-      auth = method(:authenticate).to_proc.curry['Crm']
 
-      config.before :suite do
+      auth = method(:authenticate).to_proc.curry.(
+        'Crm', expected_email, expected_token
+      )
 
-        # Stub size queries
-        size_stub.override_response :get, '.json' do |request, params, stub, &supr|
-          query = request.uri.query_values
-          if query['color'] and query['imprintable']
-            # The idea at this point would be to find the imprintable variants that corrospond to
-            # the given imprintable + color.
-            {
-              body: if query['imprintable'] == "Gildan 5000"
-                if query['color'] == 'Blue'
-                  [{ id: 3, name: 'Large', sku: '03' }, { id: 4, name: 'Extra Large', sku: '04' }]
-                else
-                  [{ id: 1, name: 'Small', sku: '77' }, { id: 2, name: 'Medium', sku: '44' }]
-                end
-              else
-                [{ id: 2, name: 'Medium', sku: '44' }, { id: 3, name: 'Large', sku: '03' }]
-              end
-            }
-          elsif query['find']
-            response = supr.call
-            response[:body] = response[:body].select { |r| r['name'].downcase == query['find'].downcase }
-            response
-          else
-            supr.call
-          end
-        end
-
-        size_stub.override_all do |request, params, stub, &rsuper|
-          auth.call request, expected_email, expected_token, &rsuper
-        end
-
-      end # config.before :suite
+      size_stub.override_response(:get, '.json', &method(:size_index))
+      size_stub.override_all(&to_authenticate_with(auth))
     end
 
     def mock_for_colors(config, options={})
@@ -106,27 +39,13 @@ class EndpointActions
       expected_token = options[:token]
       # config.before messes up the context, so we encapsulate our authenticate
       # method here.
-      auth = method(:authenticate).to_proc.curry['Crm']
+      auth = method(:authenticate).to_proc.curry.(
+        'Crm', expected_email, expected_token
+      )
 
-      config.before :suite do
-
-        # Allow us to grab colors by name
-        color_stub.override_response :get, '.json' do |request, params, stub, &supr|
-          query = request.uri.query_values
-          if query['find']
-            response = supr.call
-            response[:body] = response[:body].select { |r| r['name'].downcase == query['find'].downcase }
-            response
-          else
-            supr.call
-          end
-        end
-
-        color_stub.override_all do |request, params, stub, &rsuper|
-          auth.call request, expected_email, expected_token, &rsuper
-        end
-
-      end
+      # Allow us to grab colors by name
+      color_stub.override_response(:get, '.json', &method(:color_index))
+      color_stub.override_all(&to_authenticate_with(auth))
     end
 
     def mock_for_imprintables(config, options={})
@@ -136,32 +55,96 @@ class EndpointActions
       expected_token = options[:token]
       # config.before messes up the context, so we encapsulate our authenticate
       # method here.
-      auth = method(:authenticate).to_proc.curry['Crm']
+      auth = method(:authenticate).to_proc.curry.(
+        'Crm', expected_email, expected_token
+      )
 
-      config.before :suite do
+      # Allow us to grab imprintables by name ( TODO change from name to whatever else )
+      imprintable_stub.override_response(:get, '.json', &method(:imprintable_index))
+      imprintable_stub.override_all(&to_authenticate_with(auth))
+    end
 
-        # Allow us to grab imprintables by name ( TODO change from name to whatever else )
-        imprintable_stub.override_response :get, '.json' do |request, params, stub, &supr|
-          query = request.uri.query_values
-          if query['find']
-            response = supr.call
-            response[:body] = response[:body].select { |r| r['style_name'].downcase == query['find'].downcase }
-            response
+    protected
+
+    def idea_index(request, params, stub)
+      query = request.uri.query_values
+      records = stub.records.dup
+
+      # Sorta simulate SQL 'LIKE' predicate.
+      records.select! { |r| 
+        ['sku', 'working_name', 'product_name'].any? { |n| 
+          r[n] && r[n].downcase.include?(query['search'].downcase) } } if query && query['search']
+
+      {
+        body: records.sort_by { |r| r && r[:sku] },
+        headers: {
+          'Pagination-Limit' => 100,
+          'Pagination-Offset' => 0,
+          'Pagination-TotalCount' => stub.records.compact.count
+        }
+      }
+    end
+
+    def idea_show(request, params, stub, &supr)
+      id = stub.records.find_index { |r| r and r[:sku] == params[:id] }
+      params[:id] = id
+      supr.call request, {id: id}
+    end
+
+    def size_index(request, params, stub, &supr)
+      query = request.uri.query_values
+      if query['color'] and query['imprintable']
+        # The idea at this point would be to find the imprintable variants that corrospond to
+        # the given imprintable + color.
+        {
+          body: if query['imprintable'] == "Gildan 5000"
+            if query['color'] == 'Blue'
+              [{ id: 3, name: 'Large', sku: '03' }, { id: 4, name: 'Extra Large', sku: '04' }]
+            else
+              [{ id: 1, name: 'Small', sku: '77' }, { id: 2, name: 'Medium', sku: '44' }]
+            end
           else
-            supr.call
+            [{ id: 2, name: 'Medium', sku: '44' }, { id: 3, name: 'Large', sku: '03' }]
           end
-        end
-
-        imprintable_stub.override_all do |request, params, stub, &rsuper|
-          auth.call request, expected_email, expected_token, &rsuper
-        end
-
+        }
+      elsif query['find']
+        response = supr.call
+        response[:body] = response[:body].select { |r| r['name'].downcase == query['find'].downcase }
+        response
+      else
+        supr.call
       end
     end
 
-    private
+    def color_index(request, params, stub, &supr)
+      query = request.uri.query_values
+      if query['find']
+        response = supr.call
+        response[:body] = response[:body].select { |r| r['name'].downcase == query['find'].downcase }
+        response
+      else
+        supr.call
+      end
+    end
 
-    def authenticate(prefix, request, expected_email, expected_token, &block)
+    def imprintable_index(request, params, stub, &supr)
+      query = request.uri.query_values
+      if query['find']
+        response = supr.call
+        response[:body] = response[:body].select { |r| r['style_name'].downcase == query['find'].downcase }
+        response
+      else
+        supr.call
+      end
+    end
+
+    def to_authenticate_with(auth)
+      proc do |request, params, stub, &supr|
+        auth.call(request, &supr)
+      end
+    end
+
+    def authenticate(prefix, expected_email, expected_token, request, &block)
       if @do_authentication
         token = request.headers["#{prefix}-User-Token"]
         email = request.headers["#{prefix}-User-Email"]
