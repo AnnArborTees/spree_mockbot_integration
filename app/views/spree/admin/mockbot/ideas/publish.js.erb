@@ -15,7 +15,7 @@ $('#start-publish').hide();
   $.ajax({
     url: "<%=j spree.admin_mockbot_idea_publish_path(@idea.sku) %>",
     type: 'POST',
-    data: { step: "<%=j @step %>" },
+    data: { step: "<%=j @step.to_s %>" },
     dataType: 'script'
   })
 

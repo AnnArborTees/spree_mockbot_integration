@@ -51,13 +51,6 @@ module Spree
           else
             @complete = true
           end
-
-          # TODO -MONDAY-, EHEM, WEDNESDAY!
-          # Alright... First of all, go to publish.html.erb and the css file
-          # and replace the whole 'inactive' class with an 'active' class
-          # that works inversely.
-          # Then, make sure the correct div is assigned the active class.
-          # Then... Dive back into feature specs unless I'm missing something.
         end
 
         private

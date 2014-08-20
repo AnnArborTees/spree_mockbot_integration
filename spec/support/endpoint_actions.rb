@@ -2,10 +2,8 @@ class EndpointActions
   class << self
     attr_accessor :do_authentication
 
-    # The API::IdeasController in MockBot has some special functionality
-    # that is mimicked here.
     def mock_for_ideas(config, options={})
-      idea_stub = Endpoint::Stub.create_for Spree::Mockbot::Idea
+      idea_stub = Endpoint::Stub[Spree::Mockbot::Idea]
       expected_email = options[:email]
       expected_token = options[:token]
 
@@ -20,7 +18,7 @@ class EndpointActions
     end
 
     def mock_for_sizes(config, options={})
-      size_stub = Endpoint::Stub.create_for Spree::Crm::Size
+      size_stub = Endpoint::Stub[Spree::Crm::Size]
       expected_email = options[:email]
       expected_token = options[:token]
 
@@ -33,12 +31,11 @@ class EndpointActions
     end
 
     def mock_for_colors(config, options={})
-      color_stub = Endpoint::Stub.create_for Spree::Crm::Color
+      color_stub = Endpoint::Stub[Spree::Crm::Color]
 
       expected_email = options[:email]
       expected_token = options[:token]
-      # config.before messes up the context, so we encapsulate our authenticate
-      # method here.
+      
       auth = method(:authenticate).to_proc.curry.(
         'Crm', expected_email, expected_token
       )
@@ -49,12 +46,11 @@ class EndpointActions
     end
 
     def mock_for_imprintables(config, options={})
-      imprintable_stub = Endpoint::Stub.create_for Spree::Crm::Imprintable
+      imprintable_stub = Endpoint::Stub[Spree::Crm::Imprintable]
 
       expected_email = options[:email]
       expected_token = options[:token]
-      # config.before messes up the context, so we encapsulate our authenticate
-      # method here.
+      
       auth = method(:authenticate).to_proc.curry.(
         'Crm', expected_email, expected_token
       )

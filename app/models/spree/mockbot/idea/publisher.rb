@@ -14,7 +14,7 @@ module Spree
           [:generate_products, :import_images, :generate_variants]
         end
         def self.step_after(from)
-          return steps.first unless from
+          return steps.first unless from && steps.find_index(from)
           
           steps.slice steps.find_index(from) + 1
         end

@@ -35,6 +35,8 @@ FactoryGirl.define do
       tax_category "Test Tax"
       base true
 
+      sequence(:permalink) { |n| "idea_#{n}" }
+
       factory :mockbot_idea_with_colors do
         colors [Color.new("Red"),
                 Color.new("Blue"),
