@@ -44,7 +44,7 @@ module Spree
 
           Idea::Publisher.send @step, @idea
 
-          # TODO MONDAY
+          # TODO -MONDAY-, EHEM, WEDNESDAY!
           # Alright... First of all, go to publish.html.erb and the css file
           # and replace the whole 'inactive' class with an 'active' class
           # that works inversely.

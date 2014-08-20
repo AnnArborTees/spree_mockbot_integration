@@ -8,15 +8,16 @@ module SpreeMockbotIntegration
 
       def build_version_0(idea, imprintable_name, size_name, color_name)
         product_code = assure_product_code idea
-        imprintable = find_record Spree::Crm::Imprintable, imprintable_name
-        size        = find_record Spree::Crm::Size,        size_name
-        color       = find_record Spree::Crm::Color,       color_name
+        print_method = assure_print_method idea
+        imprintable  = find_record Spree::Crm::Imprintable, imprintable_name
+        size         = find_record Spree::Crm::Size,        size_name
+        color        = find_record Spree::Crm::Color,       color_name
 
         raise "imprintable is nil" if imprintable.nil?
         raise "size is nil"        if size.nil?
         raise "color is nil"       if color.nil?
 
-        "#{product_code}-x#{imprintable.sku}#{size.sku}#{color.sku}"
+        "#{product_code}-#{print_method}#{imprintable.sku}#{size.sku}#{color.sku}"
       end
 
       private
@@ -30,6 +31,16 @@ module SpreeMockbotIntegration
         else
           raise "Expected String or Spree::Mockbot::Idea. Got #{idea.class.name}."
         end
+      end
+
+      def assure_print_method(idea)
+        case idea
+        when String
+          Spree::Mockbot::Idea.find(idea)
+        else
+          idea
+        end
+          .base? ? 2 : 1
       end
 
       def find_record(type, find)

@@ -174,7 +174,7 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
         end
 
         it 'should format the sku using sku version 0' do
-          2.times {idea.colors.pop}
+          2.times { idea.colors.pop }
           idea.imprintables.pop
 
           expect(idea.colors.map(&:name)).to eq ['Red']
@@ -187,15 +187,15 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
           idea.imprintables.first.sku = "5555"
 
           publisher.generate_variants(idea)
-          expect(product.variants.count).to eq 2
+          expect(product.variants.size).to eq 2
 
-          expect(product.variants.has_option('apparel-size', 'small').count).to eq 1
+          expect(product.variants.has_option('apparel-size', 'small').size).to eq 1
           product.variants.has_option('apparel-size', 'small').first.tap do |small|
-            expect(small.sku).to eq "0-#{idea.sku}-x555577111"
+            expect(small.sku).to eq "0-#{idea.sku}-2555577111"
           end
-          expect(product.variants.has_option('apparel-size', 'medium').count).to eq 1
+          expect(product.variants.has_option('apparel-size', 'medium').size).to eq 1
           product.variants.has_option('apparel-size', 'medium').first.tap do |medium|
-            expect(medium.sku).to eq "0-#{idea.sku}-x555544111"
+            expect(medium.sku).to eq "0-#{idea.sku}-2555544111"
           end
         end
 

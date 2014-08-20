@@ -33,6 +33,7 @@ FactoryGirl.define do
       base_price 15.99
       shipping_category "Test Shipping"
       tax_category "Test Tax"
+      base true
 
       factory :mockbot_idea_with_colors do
         colors [Color.new("Red"),
