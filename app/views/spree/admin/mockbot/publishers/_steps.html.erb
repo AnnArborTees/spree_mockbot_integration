@@ -18,7 +18,7 @@
     </div>
   <% end %>
 
-  <div id='publish-step-done' class='publish-step done-step alpha three columns <%= local_assigns[:publisher].try(:current_step) == 'done' ? 'active' : '' %>'>
+  <div id='publish-step-done' class='publish-step done-step alpha three columns <%= local_assigns[:publisher].try(:current_step) == "done" ? "active" : "" %>'>
     <i class='icon-play'></i>
     <div class='publish-content'>
       Done!

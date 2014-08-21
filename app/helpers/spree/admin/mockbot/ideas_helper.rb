@@ -5,10 +5,12 @@ module Spree::Admin::Mockbot::IdeasHelper
   end
 
   def links_to_product_from_idea(idea)
-    s = idea.associated_spree_products.map{ |x|
-      link_to x.sku, spree.edit_admin_product_path(x)
-    }.join(',').html_safe
-    s.empty? ? "No matching products" : s
+    content = idea.associated_spree_products.map do |product|
+      link_to product.slug, spree.edit_admin_product_path(product)
+    end
+      .join(', ').html_safe
+
+    content.empty? ? "No matching products" : content
   end
 
   def import_idea_to_product_link(idea)

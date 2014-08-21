@@ -88,7 +88,7 @@ describe Spree::Admin::Mockbot::PublishersController, publish_spec: true do
 
           it 'puts the error message into the flash' do
             spree_put :update, id: publisher.id
-            expect(flash[:error]).to eq 'test message'
+            expect(flash[:error]).to include 'test message'
           end
         end
       end

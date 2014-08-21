@@ -23,10 +23,11 @@ describe 'spree/admin/mockbot/publishers/_steps.html.erb', view_spec: true do
 
     context 'when the current step is "done"' do
       before :each do
-        allow(rendered).to receive(:current_step).and_return 'done'
+        allow(publisher).to receive(:current_step).and_return 'done'
       end
 
       it 'renders the "done" div with the .done class' do
+        render partial: path, locals: { publisher: publisher }
         expect(rendered).to have_selector '.done-step.active'
       end
     end
@@ -35,7 +36,7 @@ describe 'spree/admin/mockbot/publishers/_steps.html.erb', view_spec: true do
       before(:each) { allow(publisher).to receive(:completed?).and_return true }
 
       it 'renders divs corrosponding to completed steps with .complete' do
-        render partial: path, locals: { publisher: publisher }        
+        render partial: path, locals: { publisher: publisher }
 
         expect(rendered).to have_selector '.publish-step.complete'
       end
