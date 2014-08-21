@@ -41,27 +41,32 @@ feature 'Mockbot Ideas' do
 
         expect(page).to have_content 'Generate products'
         expect(page).to have_content 'Import images'
-        expect(page).to have_content 'Gather sizing data'
         expect(page).to have_content 'Generate variants'
       end
 
       scenario 'I can publish an idea', actual_publishing: true do
-        visit spree.admin_mockbot_idea_publish_path(idea0.sku)
+        visit spree.new_admin_mockbot_idea_publisher_path(idea0.sku)
 
         click_button "Start"
-        expect(page).to have_selector ":not(.inactive)", text: 'Generate products'
-        expect(page).to have_selector ".publish-step .inactive", count: 3
+        expect(page).to have_selector ".active", text: 'Generate products'
+        expect(page).to have_selector ".publish-step .active", count: 1
         click_button "Start"
-        expect(page).to have_selector ":not(.inactive)", text: 'Import images'
-        expect(page).to have_selector ".publish-step .inactive", count: 3
+        expect(page).to have_selector ".active", text: 'Import images'
+        expect(page).to have_selector ".publish-step .active", count: 1
         click_button "Start"
-        expect(page).to have_selector ":not(.inactive)", text: 'Gather sizing data'
-        expect(page).to have_selector ".publish-step .inactive", count: 3
-        click_button "Start"
-        expect(page).to have_selector ":not(.inactive)", text: 'Genrate variants'
-        expect(page).to have_selector ".publish-step .inactive", count: 3
+        expect(page).to have_selector ".active", text: 'Genrate variants'
+        expect(page).to have_selector ".publish-step .active", count: 1
 
         raise "it is finished"
+      end
+
+      scenario 'I can publish an idea with javascript', actual_publishing: true do
+        visit spree.new_admin_mockbot_idea_publisher_path(idea0.sku)
+
+        click_button 'Start'
+        sleep 15
+
+        raise 'ALRIGHTTTTT'
       end
 
       context 'old', pending: true do

@@ -10,7 +10,7 @@ module Spree
       end
 
       class Publisher < ActiveRecord::Base
-        self.table_name = 'spree_mockbot_idea_publishers'
+        self.table_name = 'spree_mockbot_publishers'
 
         def self.steps
           %w(generate_products import_images generate_variants)
@@ -39,6 +39,14 @@ module Spree
           when Fixnum then super(Publisher.steps[step])
           else super
           end
+        end
+
+        def current_step_number
+          (Publisher.steps.find_index(current_step) || -1) + 1
+        end
+
+        def completed?(step)
+          completed_steps.lazy.map(&:name).include?(step.to_s)
         end
 
         def generate_products
@@ -141,9 +149,13 @@ module Spree
 
           variant = Spree::Variant.new
           
-          variant.sku = SpreeMockbotIntegration::Sku.build(
-              0, idea, imprintable.name, size, product_color.name
-            )
+          begin
+            variant.sku = SpreeMockbotIntegration::Sku.build(
+                0, idea, imprintable.name, size, product_color.name
+              )
+          rescue RuntimeError => e
+            raise PublishError.new(imprintable), e.message
+          end
 
           product.variants << variant
 

@@ -1,0 +1,7 @@
+<% content_for :page_title do %>
+  Publishing idea <%= @idea.try(:sku) || @publisher.try(:idea).try(:sku) %>
+<% end %>
+
+<%= render partial: 'steps', locals: { publisher: @publisher } %>
+
+<%= render partial: 'start_button', locals: { idea: @idea, publisher: local_assigns[:publisher] } %>

@@ -54,6 +54,7 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
       end
       let(:dummy_product) { build_stubbed :custom_product, name: 'Dummy' }
       let(:publish_error) { Spree::Mockbot::Idea::PublishError }
+      let(:stub_step) { Struct.new(:name) }
 
       before(:each) { WebMockApi.stub_test_image! }
 
@@ -61,6 +62,28 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
         expect(publisher).to respond_to :generate_products
         expect(publisher).to respond_to :import_images
         expect(publisher).to respond_to :generate_variants
+      end
+
+      describe '#completed?', completed: true do
+        subject { publisher.completed? 'test_step' }
+
+        context 'when there is a step with the given name in completed_steps' do
+          before :each do
+            allow(publisher).to receive(:completed_steps)
+              .and_return [stub_step.new('no'), stub_step.new('test_step')]
+          end
+
+          it { is_expected.to be_truthy }
+        end
+
+        context 'when completed_steps does not contain a matching step' do
+          before :each do
+            allow(publisher).to receive(:completed_steps)
+              .and_return [stub_step.new('no'), stub_step.new('other')]
+          end
+
+          it { is_expected.to be_falsey }
+        end
       end
 
       describe '#perform_step!' do
