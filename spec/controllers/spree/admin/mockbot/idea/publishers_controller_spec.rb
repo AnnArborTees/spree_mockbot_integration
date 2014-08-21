@@ -11,7 +11,12 @@ describe Spree::Admin::Mockbot::Idea::PublishersController, publish_spec: true d
   end
 
   describe 'POST #create' do
-    
+    it 'creates a new publisher' do
+      expect(Spree::Mockbot::Idea::Publisher.count).to eq 0
+      spree_post :create, idea_id: idea.sku
+      expect(Spree::Mockbot::Idea::Publisher.count).to eq 1
+      expect(Spree::Mockbot::Idea::Publisher.first.idea).to eq idea
+    end
   end
 
   describe 'PUT #update' do
@@ -21,11 +26,10 @@ describe Spree::Admin::Mockbot::Idea::PublishersController, publish_spec: true d
       end
 
       context 'and its current step is not "done"' do
-
-        # TODO WEDNESDAY this isn't passing. See what's up.
         it 'executes its current step' do
           allow(Spree::Mockbot::Idea::Publisher)
             .to receive(:find).and_return(publisher)
+          
           allow(publisher).to receive(:current_step).and_return 'import_images'
           expect(publisher).to receive(:import_images)
 
@@ -40,7 +44,7 @@ describe Spree::Admin::Mockbot::Idea::PublishersController, publish_spec: true d
           spree_put :update, id: publisher.id,
                        publisher: { current_step: 'done' }
           expect(response).to be_ok
-          expect(publisher.current_step).to eq 'done'
+          expect(publisher.reload.current_step).to eq 'done'
         end
       end
 

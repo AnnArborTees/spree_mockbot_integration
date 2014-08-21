@@ -101,10 +101,10 @@ module Spree
         def perform_step!
           raise "Already done!" if current_step == 'done'
 
-          current_step = Publisher.step_after nil if current_step.nil?
+          self.current_step = Publisher.step_after nil if current_step.nil?
 
           send(current_step)
-          current_step = Publisher.step_after current_step
+          self.current_step = Publisher.step_after current_step
           save
           raise "Failed to advance to the next step!" unless valid?
         end

@@ -3,6 +3,12 @@ module Spree
     module Mockbot
       module Idea
         class PublishersController < Spree::Admin::ResourceController
+          def create
+            @publisher = model_class.create(idea_sku: params[:idea_id])
+
+            render text: 'plz add views'
+          end
+
           def update
             @step = params[:publisher].try(:[], :current_step)
 
@@ -10,9 +16,7 @@ module Spree
               @publisher.perform_step! unless @publisher.current_step == 'done'
             else
               @publisher.current_step = @step
-
-              @publisher.perform_step! unless @step == 'done'
-              @publisher.save              if @step == 'done'
+              @publisher.send(@step == 'done' ? :save : :perform_step!)
             end
 
             render text: 'plz add views'
@@ -22,15 +26,6 @@ module Spree
 
           def model_class
             Spree::Mockbot::Idea::Publisher
-          end
-
-          private
-
-          def permitted_params
-            params.permit(
-              :id, :idea_id,
-              publisher: [:current_step, :idea_sku]
-            )
           end
         end
       end
