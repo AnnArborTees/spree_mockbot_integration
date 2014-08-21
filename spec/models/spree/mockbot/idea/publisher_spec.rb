@@ -43,7 +43,7 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
   context 'with an idea' do
     let!(:idea) { create :mockbot_idea_with_images }
 
-    describe 'Publisher' do
+    describe 'Step methods' do
       let!(:size_small)  { create :crm_size_small }
       let!(:size_medium) { create :crm_size_medium }
       let!(:size_large)  { create :crm_size_large }
@@ -61,6 +61,10 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
         expect(publisher).to respond_to :generate_products
         expect(publisher).to respond_to :import_images
         expect(publisher).to respond_to :generate_variants
+      end
+
+      describe '#perform_step!' do
+        it 'performs current_step, then increments it'
       end
 
       describe '#generate_products' do

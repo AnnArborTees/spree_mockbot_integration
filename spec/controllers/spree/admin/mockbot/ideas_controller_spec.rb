@@ -7,9 +7,11 @@ describe Spree::Admin::Mockbot::IdeasController, mockbot_spec: true do
     let!("idea#{n}") { create :mockbot_idea }
   end
 
+  routes { Spree::Core::Engine.routes }
+
   describe 'GET #index' do
     it 'should assign all the ideas, sorted by sku' do
-      spree_get :index
+      get :index
       expect(assigns(:ideas).map(&:working_name)).
         to eq [idea0, idea1, idea2].sort_by(&:sku).map(&:working_name)
     end
@@ -18,7 +20,7 @@ describe Spree::Admin::Mockbot::IdeasController, mockbot_spec: true do
       create :mockbot_idea, sku: 'first_keyword_idea'
       create :mockbot_idea, sku: 'keyword_idea_number_two'
 
-      spree_get :index, search: 'keyword'
+      get :index, search: 'keyword'
       expect(assigns(:ideas).count).to eq 2
     end
 
@@ -28,7 +30,7 @@ describe Spree::Admin::Mockbot::IdeasController, mockbot_spec: true do
       end
 
       it 'should catch the error and assign @connection_refused as true' do
-        expect{spree_get :index}.to_not raise_error
+        expect{get :index}.to_not raise_error
         expect(assigns(:connection_refused)).to be_truthy
       end
     end
@@ -39,13 +41,13 @@ describe Spree::Admin::Mockbot::IdeasController, mockbot_spec: true do
       end
 
       it 'should catch the error and assign @unauthorized_access as true' do
-        expect{spree_get :index}.to_not raise_error
+        expect{get :index}.to_not raise_error
         expect(assigns(:unauthorized_access)).to be_truthy
       end
     end
 
     it '@connection_refused should be nil' do
-      spree_get :index
+      get :index
       expect(assigns(:connection_refused)).to be_nil
     end
   end
