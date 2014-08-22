@@ -75,7 +75,7 @@ module Spree
                 "Failed to generate product for idea #{idea.sku}. "\
                 "Product errors: #{product.errors.full_messages}"
               end
-              
+
               product.log_update "Copied info from MockBot idea #{idea.sku}"
             end
           end
@@ -134,13 +134,13 @@ module Spree
         protected
 
         def step(str, &block)
-          self.current_step = str.to_s
-          save
+          unless self.current_step == str.to_s
+            self.current_step = str.to_s
+            save
+          end
           raise errors.messages[:current_step] unless valid?
 
-          @step_str = str.to_s
           yield
-          @step_str = nil
 
           unless completed_steps.where(name: current_step).exists?
             completed_steps << Step.new(name: current_step)
@@ -214,8 +214,9 @@ module Spree
               raise sql_error
             end
 
-            raise_and_log product, "Couldn't #{@step_str.humanize.downcase}. "\
-                                   "#{sql_error.message}"
+            raise_and_log product, 
+              "Couldn't #{current_step.humanize.downcase}. "\
+              "#{sql_error.message}"
           end
         end
 
