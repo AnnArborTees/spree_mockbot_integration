@@ -82,14 +82,14 @@ class EndpointActions
     end
 
     def idea_show(request, params, stub, &supr)
-      id = stub.records.find_index { |r| r and r[:sku] == params[:id] }
-      params[:id] = id
-      supr.call request, {id: id}
+      id = stub.records.find_index { |r| r && r['sku'] == params[:id] }
+      raise "No idea with sku #{params[:id]} found" if id.nil?
+      supr.call request, { id: id }, stub
     end
 
     def size_index(request, params, stub, &supr)
       query = request.uri.query_values
-      if query['color'] and query['imprintable']
+      if query['color'] && query['imprintable']
         # The idea at this point would be to find the imprintable variants that corrospond to
         # the given imprintable + color.
         {

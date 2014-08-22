@@ -105,6 +105,12 @@ module Spree
         if Rails.env.test?
           mockup.file_url
         else
+          # TODO FRIDAYYYY
+          # Maybe figure this out. Otherwise the last thing you did was 
+          # make Publisher.step_after return done after the last step.
+          # So I guess you should make the views give a completion dialog
+          # / button or whatever. Perhaps make the javascript happen.
+          # Views for updates, perhaps? Any of this stuff.
           raise "What the hell should this be?"
         end
       end

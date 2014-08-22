@@ -2,7 +2,7 @@
   <% Spree::Mockbot::Idea::Publisher.steps.each_with_index do |step, i| %>
   <% completed = local_assigns[:publisher].try(:completed?, step) %>
 
-    <div    id='publish-step-<%=i+1%>'
+    <div id='publish-step-<%=i+1%>'
          class='publish-step alpha three columns 
          <%= local_assigns[:publisher].try(:current_step) == step ? 'active' : '' %>
          <%= completed ? 'complete' : '' %>'>
