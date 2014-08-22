@@ -1,0 +1,20 @@
+<% if @error %>
+  $('.steps-container').append(<%= @error %>);
+<% else %>
+  $('#start-publish').remove();
+
+  MockbotPublish.clearActives();
+
+  <% if @publisher.done? %>
+    $('#cancel-publish').remove();
+    $('#publish-step-done').addClass('active');
+
+    $('#publish-buttons').append(
+      "<%=j render partial: 'finish_button', locals: { publisher: @publisher } %>"
+    );
+  <% else %>
+    $('#publish-step-<%= @publisher.current_step_number -%>').addClass('active');
+
+    MockbotPublish.updatePublisher("<%= spree.admin_mockbot_publisher_path(@publisher) %>");
+  <% end %>
+<% end %>

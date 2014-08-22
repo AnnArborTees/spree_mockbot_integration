@@ -1,0 +1,18 @@
+<% if @error %>
+  $('.steps-container').append(<%= @error %>);
+<% else %>
+  // $('#start-publish').hide();
+  MockbotPublish.clearActives();
+
+  var $currentStep = 
+    <% if publisher.done? %>
+      $('#publish-step-done');
+      // TODO add complete button or something
+    <% else %>
+      $('#publish-step-<%= publisher.current_step_number -%>');
+    <% end %>
+  
+  $currentStep.addClass('active');
+<% end %>
+
+// bluh this isn't used anymore

@@ -1,0 +1,15 @@
+<% if @error %>
+  $('.steps-container').append(<%= @error %>);
+<% else %>
+  $('#start-publish').hide();
+  $('#publish-buttons').prepend(
+    "<%=j render partial: 'cancel_button', locals: { publisher: @publisher } %>"
+  );
+
+  MockbotPublish.clearActives();
+
+  $('#publish-step-<%= @publisher.current_step_number -%>').addClass('active');
+
+  MockbotPublish.updatePublisher("<%= spree.admin_mockbot_publisher_path(@publisher) %>");
+
+<% end %>
