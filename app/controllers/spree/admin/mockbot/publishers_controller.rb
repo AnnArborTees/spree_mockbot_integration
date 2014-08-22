@@ -2,11 +2,14 @@ module Spree
   module Admin
     module Mockbot
       class PublishersController < Spree::Admin::ResourceController
-        after_filter :assign_idea, only: [:create, :update]
+        after_filter :assign_idea, only: [:create, :update, :show]
+
+        def show
+          render locals: { publisher: @publisher }
+        end
 
         def new
           @idea = Spree::Mockbot::Idea.find(params[:idea_id])
-
           render 'show'
         end
 
@@ -33,6 +36,13 @@ module Spree
           end
 
           render 'show', locals: { publisher: @publisher }
+        end
+
+        def destroy
+          @publisher = Spree::Mockbot::Idea::Publisher.find(params[:id])
+          @publisher.destroy
+
+          redirect_to spree.admin_mockbot_ideas_path
         end
 
         protected

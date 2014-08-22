@@ -21,10 +21,21 @@ feature 'Mockbot Ideas' do
     end
 
     context 'publishing ideas', image: true do
-      let!(:idea0) { create :mockbot_idea }
+      let!(:idea0) { create :mockbot_idea_with_images, status: 'Ready to Publish' }
       let!(:idea1) { create :mockbot_idea_with_images, status: 'Ready to Publish' }
       let!(:idea2) { create :mockbot_idea_with_images, status: 'Published' }
 
+      let!(:red)   { create :crm_color, name: 'Red', sku: '111' }
+      let!(:green) { create :crm_color, name: 'Green' }
+      let!(:blue)  { create :crm_color, name: 'Blue' }
+      let!(:crm_imprintable) do
+        create :crm_imprintable, style_name: 'Gildan 5000', sku: '5555'
+      end
+      let!(:other_crm_imprintable) do
+        create :crm_imprintable, 
+               style_name: 'American Apparel Standard or whatever',
+               sku: '6666'
+      end
 
       before(:each) { WebMockApi.stub_test_image! }
 
@@ -47,26 +58,40 @@ feature 'Mockbot Ideas' do
       scenario 'I can publish an idea', actual_publishing: true do
         visit spree.new_admin_mockbot_idea_publisher_path(idea0.sku)
 
-        click_button "Start"
-        expect(page).to have_selector ".active", text: 'Generate products'
-        expect(page).to have_selector ".publish-step .active", count: 1
-        click_button "Start"
-        expect(page).to have_selector ".active", text: 'Import images'
-        expect(page).to have_selector ".publish-step .active", count: 1
-        click_button "Start"
-        expect(page).to have_selector ".active", text: 'Genrate variants'
-        expect(page).to have_selector ".publish-step .active", count: 1
+        expect(Spree::Product.count).to eq 0
+        expect(Spree::Variant.count).to eq 0
 
-        raise "it is finished"
+        click_button "Start"
+        expect(Spree::Mockbot::Idea::Publisher.count).to eq 1
+        expect(page).to have_selector ".active", text: 'Generate products ...'
+        click_button "Start"
+        expect(page).to_not have_content 'Failed to'
+        expect(page).to have_selector ".active", text: 'Import images ...'
+        click_button "Start"
+        expect(page).to_not have_content 'Failed to'
+        expect(page).to have_selector ".active", text: 'Generate variants ...'
+        click_button "Start"
+        expect(page).to_not have_content 'Failed to'
+        expect(page).to have_selector ".active", text: 'Done!'
+        click_button 'Complete'
+
+        expect(Spree::Product.count).to eq 3
+        expect(Spree::Variant.count).to eq 3 * 5
+        expect(Spree::Mockbot::Idea::Publisher.count).to eq 0
       end
 
-      scenario 'I can publish an idea with javascript', actual_publishing: true do
+      scenario 'I can publish an idea with javascript', actual_publishing: true, js: true do
         visit spree.new_admin_mockbot_idea_publisher_path(idea0.sku)
+
+        expect(Spree::Product.count).to eq 0
+        expect(Spree::Variant.count).to eq 0
 
         click_button 'Start'
         sleep 15
 
-        raise 'ALRIGHTTTTT'
+        expect(Spree::Product.count).to eq 3
+        expect(Spree::Variant.count).to eq 3 * 5
+        expect(Spree::Mockbot::Idea::Publisher.count).to eq 0
       end
 
       context 'old', pending: true do

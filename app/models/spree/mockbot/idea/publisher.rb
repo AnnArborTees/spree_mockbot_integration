@@ -50,6 +50,14 @@ module Spree
           completed_steps.lazy.map(&:name).include?(step.to_s)
         end
 
+        def completed_all?
+          (Publisher.steps - completed_steps.map(&:name)).empty?
+        end
+
+        def done?
+          current_step == 'done'
+        end
+
         def generate_products
           raise_if(idea, idea.colors.empty?) { "Idea has no colors" }
           

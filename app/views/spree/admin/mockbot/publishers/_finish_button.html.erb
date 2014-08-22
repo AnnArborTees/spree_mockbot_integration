@@ -1,3 +1,3 @@
-<!-- <div class="row">
-  <%= button_to "Start", publisher_path(local_assigns), remote: false, method: publisher_method(local_assigns), id: 'start-publish', data: { disable_with: "Starting..." }, form: { class: (local_assigns[:publisher].try(:current_step).nil? ? '' : 'js-hide-me') } %>
-</div> -->
+<div class="row">
+  <%= button_to "Complete!", spree.admin_mockbot_publisher_path(publisher), remote: false, method: :delete, id: 'finish-publish', form: {} %>
+</div>
