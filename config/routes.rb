@@ -5,6 +5,7 @@ Spree::Core::Engine.routes.draw do
         resources :publishers, shallow: true, except: [:new]
       end
     end
+    get 'products/:product_id/updates', to: 'updates#index', as: :product_updates
     get 'mockbot/ideas/:idea_id/publish', to: 'mockbot/publishers#new', as: :new_idea_publisher
     # TODO make this clump into resources
     get '/api_settings', to: 'api_settings#edit', as: :api_settings

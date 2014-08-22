@@ -61,3 +61,8 @@ the installer will append this file to the app vendored assets here: 'vendor/ass
 #cancel-publish {
   background-color: #950026;
 }
+
+.step-error {
+  font-size: 120%;
+  color: #BE0025;
+}

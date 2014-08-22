@@ -39,7 +39,7 @@ feature 'Mockbot Ideas' do
 
       before(:each) { WebMockApi.stub_test_image! }
 
-      scenario 'Clicking the publish button takes me to the publish page', failed: true do
+      scenario 'Clicking the publish button takes me to the publish page' do
         visit spree.admin_mockbot_ideas_path
 
         original_all = Spree::Mockbot::Idea.all
@@ -103,6 +103,8 @@ feature 'Mockbot Ideas' do
       end
 
       scenario 'I can exit mid-way, then resume publishing'
+
+      scenario 'When something does wrong, I see an error'
 
       context 'old', pending: true do
         scenario 'I can publish a publishable idea, and see the product on the product page' do

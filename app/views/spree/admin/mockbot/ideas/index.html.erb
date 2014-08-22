@@ -36,12 +36,12 @@
       <col style="width: 17%;">
     </colgroup>
     <thead>
-    <tr data-hook="admin_ideas_index_headers">
-      <th><%= Spree.t(:sku) %></th>
-      <th><%= Spree.t(:mockbot_status) %></th>
-      <th>Spree Matches</th>
-      <th data-hook="admin_ideas_index_header_actions" class="actions"></th>
-    </tr>
+      <tr data-hook="admin_ideas_index_headers">
+        <th><%= Spree.t(:sku) %></th>
+        <th><%= Spree.t(:mockbot_status) %></th>
+        <th>Spree Matches</th>
+        <th data-hook="admin_ideas_index_header_actions" class="actions"></th>
+      </tr>
     </thead>
     <tbody>
     <% @ideas.each do |idea| %>

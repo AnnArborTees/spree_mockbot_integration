@@ -18,14 +18,6 @@ $(document).ready(function () {
     }, 300);
   }
 
-  // $('.js-hide-me').each(function() {
-  //   $(this).hide();
-  // });
-
-  if ($('#js-auto-publish').length) {
-
-  }
-
 });
 
 var MockbotPublish = {

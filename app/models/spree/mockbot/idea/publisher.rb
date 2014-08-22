@@ -66,14 +66,24 @@ module Spree
               product = idea.product_of_color(color) || Spree::Product.new
 
               idea.copy_to_product(product, color)
-              idea.assign_sku_to product
+              begin
+                idea.assign_sku_to product
+                product.save
+              rescue Exception => sql_error
+                unless sql_error.message.starts_with?('Mysql2::Error')
+                  raise sql_error
+                end
+
+                raise_and_log product, "Couldn't generate products. "\
+                                       "#{sql_error.message}"
+              end
 
               raise_if(product, !product.valid?, true) do
                 "Failed to generate product for idea #{idea.sku}. "\
                 "Product errors: #{product.errors.full_messages}"
               end
               
-              product.save
+              product.log_update "Copied info from MockBot idea #{idea.sku}"
             end
           end
         end
@@ -87,6 +97,8 @@ module Spree
                 "Failed to import #{failed.size} images to product "\
                 "#{product.master.sku}"
               end
+
+              product.log_update "Grabbed image data from MockBot idea #{idea.sku}"
             end
           end
         end
@@ -110,7 +122,7 @@ module Spree
                 sizes.each(&curry(:add_variant).(idea, product, imprintable))
               end
 
-              product.log_update "Added variants from idea #{idea.sku}"
+              product.log_update "Added variants from MockBot idea #{idea.sku}"
             end
           end
         end
@@ -192,6 +204,11 @@ module Spree
           message = yield
           object.log_update "ERROR: #{message}" if log
           raise PublishError.new(object), message
+        end
+
+        def raise_and_log(product, message)
+          product.log_update "ERROR: #{message}"
+          raise PublishError.new(product), message
         end
 
         %w(size color style).each do |pre|

@@ -77,6 +77,7 @@ module Spree
             @publisher.perform_step!
           rescue Spree::Mockbot::Idea::PublishError => e
             @error = e
+            return if request.xhr?
             flash[:error] = "Failed to "\
               "#{@publisher.current_step.humanize.downcase}: #{e.message}"
           end
