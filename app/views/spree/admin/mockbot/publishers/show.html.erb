@@ -2,10 +2,20 @@
   Publishing idea <%= @idea.try(:sku) || @publisher.try(:idea).try(:sku) %>
 <% end %>
 
+<div class='row'>
+  <%= link_to '<- Idea List', spree.admin_mockbot_ideas_path, class: 'button' %>
+</div>
+
 <%= render partial: 'steps', locals: { publisher: local_assigns[:publisher] } %>
 
-<% if local_assigns[:publisher].try(:done?) %>
-  <%= render partial: 'finish_button', locals: { publisher: local_assigns[:publisher] } %>
-<% else %>
-  <%= render partial: 'start_button', locals: { idea: @idea, publisher: local_assigns[:publisher] } %>
-<% end %>
+<div class='row' id='publish-buttons'>
+
+  <% if local_assigns[:publisher].try(:done?) %>
+    <%= render partial: 'finish_button', locals: { publisher: local_assigns[:publisher] } %>
+  <% else %>
+    <%= render partial: 'cancel_button', locals: { publisher: publisher } if local_assigns[:publisher] %>
+
+    <%= render partial: 'start_button', locals: { idea: @idea, publisher: local_assigns[:publisher] } %>
+  <% end %>
+
+</div>

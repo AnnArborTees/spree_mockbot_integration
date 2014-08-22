@@ -39,7 +39,7 @@ feature 'Mockbot Ideas' do
 
       before(:each) { WebMockApi.stub_test_image! }
 
-      scenario 'Clicking the publish button takes me to the publish page' do
+      scenario 'Clicking the publish button takes me to the publish page', failed: true do
         visit spree.admin_mockbot_ideas_path
 
         original_all = Spree::Mockbot::Idea.all
@@ -47,6 +47,7 @@ feature 'Mockbot Ideas' do
 
         allow(Spree::Mockbot::Idea).to receive(:find).and_return idea1
         allow(idea1).to receive(:http_response).and_return({})
+        allow(idea0).to receive(:status).and_return 'Ready to Publish'
         
         click_button 'Publish'
 
@@ -56,7 +57,7 @@ feature 'Mockbot Ideas' do
       end
 
       scenario 'I can publish an idea', actual_publishing: true do
-        visit spree.new_admin_mockbot_idea_publisher_path(idea0.sku)
+        visit spree.admin_new_idea_publisher_path(idea0.sku)
 
         expect(Spree::Product.count).to eq 0
         expect(Spree::Variant.count).to eq 0
@@ -81,18 +82,27 @@ feature 'Mockbot Ideas' do
       end
 
       scenario 'I can publish an idea with javascript', actual_publishing: true, js: true do
-        visit spree.new_admin_mockbot_idea_publisher_path(idea0.sku)
+        visit spree.admin_new_idea_publisher_path(idea0.sku)
 
         expect(Spree::Product.count).to eq 0
         expect(Spree::Variant.count).to eq 0
 
         click_button 'Start'
-        sleep 15
+
+        Timeout::timeout(30) do
+          loop do
+            break if all('input[value="Complete"]').size > 0
+          end
+        end
+
+        click_button 'Complete'
 
         expect(Spree::Product.count).to eq 3
         expect(Spree::Variant.count).to eq 3 * 5
         expect(Spree::Mockbot::Idea::Publisher.count).to eq 0
       end
+
+      scenario 'I can exit mid-way, then resume publishing'
 
       context 'old', pending: true do
         scenario 'I can publish a publishable idea, and see the product on the product page' do

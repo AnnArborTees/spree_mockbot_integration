@@ -19,6 +19,15 @@ describe Spree::Mockbot::Idea, idea_spec: true do
     end
   end
 
+  describe '#publisher', idea_publisher: true do
+    let!(:idea) { create :mockbot_idea }
+    let!(:publisher) { create :mockbot_idea_publisher, idea_sku: idea.sku }
+
+    it 'returns the publisher with idea_sku = idea.sku' do
+      expect(idea.publisher).to eq publisher
+    end
+  end
+
   context 'with authentication' do
     before :each do
       EndpointActions.do_authentication = true

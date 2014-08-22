@@ -17,8 +17,8 @@ module Spree
         end
 
         def self.step_after(from)
-          return steps.first unless from && steps.find_index(from)
           return 'done' if from == steps.last
+          return steps.first unless from && steps.find_index(from)
 
           steps.slice steps.find_index(from) + 1
         end

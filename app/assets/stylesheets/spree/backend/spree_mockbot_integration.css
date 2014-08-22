@@ -55,6 +55,9 @@ the installer will append this file to the app vendored assets here: 'vendor/ass
   font-size: 200%;
 }
 
-#start-publish,#finish-publish {
+#start-publish,#finish-publish,#cancel-publish {
   font-size: 300%;
+}
+#cancel-publish {
+  background-color: #950026;
 }

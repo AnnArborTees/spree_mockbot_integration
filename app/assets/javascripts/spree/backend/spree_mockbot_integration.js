@@ -18,10 +18,38 @@ $(document).ready(function () {
     }, 300);
   }
 
-  $('.js-hide-me').each(function() {
-//    $(this).hide();
-  });
+  // $('.js-hide-me').each(function() {
+  //   $(this).hide();
+  // });
+
+  if ($('#js-auto-publish').length) {
+
+  }
 
 });
 
-// TODO create method to activate/deactivate the boxes
+var MockbotPublish = {
+  clearActives: function() {
+    $('.publish-step.active').each(function() {
+      var $this = $(this);
+      $this.removeClass('active');
+      $this.addClass('complete');
+
+      $icon = $this.find('i');
+      $icon.removeClass('icon-play');
+      $icon.addClass('icon-check');
+    });
+  },
+
+  updatePublisher: function(url) {
+    $.ajax({
+      url: url,
+      type: 'PUT',
+      dataType: 'script'
+    })
+      .fail(function (jqXHR, textStatus) {
+        if (textStatus == 'error') { return; }
+        alert(textStatus);
+      });
+  }
+}

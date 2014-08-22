@@ -10,7 +10,9 @@ module Spree
 
         def new
           @idea = Spree::Mockbot::Idea.find(params[:idea_id])
-          render 'show'
+          return render 'show' unless @idea.publisher
+
+          redirect_to spree.admin_mockbot_publisher_path(@idea.publisher)
         end
 
         def create
@@ -22,7 +24,12 @@ module Spree
               Spree::Mockbot::Idea::Publisher.steps.first
             end
 
-          render 'show', locals: { publisher: @publisher }
+          respond_to do |format|
+            format.html do
+              render 'show', locals: { publisher: @publisher }
+            end
+            format.js
+          end
         end
 
         def update
@@ -35,14 +42,22 @@ module Spree
             @step == 'done' ? @publisher.save : perform_step!
           end
 
-          render 'show', locals: { publisher: @publisher }
+          respond_to do |format|
+            format.html do
+              render 'show', locals: { publisher: @publisher }
+            end
+            format.js
+          end
         end
 
         def destroy
           @publisher = Spree::Mockbot::Idea::Publisher.find(params[:id])
           @publisher.destroy
 
-          redirect_to spree.admin_mockbot_ideas_path
+          redirect_to(
+            params[:target] ||
+            spree.admin_new_idea_publisher_path(@publisher.idea_sku)
+          )
         end
 
         protected

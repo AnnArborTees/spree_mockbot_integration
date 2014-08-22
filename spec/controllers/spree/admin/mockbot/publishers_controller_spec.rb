@@ -10,6 +10,18 @@ describe Spree::Admin::Mockbot::PublishersController, publish_spec: true do
     end
   end
 
+  describe 'GET #new', new: true do
+    context 'when the idea already has a publisher' do
+      before(:each) { publisher }
+
+      it 'redirects to the show path for that publisher' do
+        spree_get :new, idea_id: idea.sku
+        expect(response)
+          .to redirect_to spree.admin_mockbot_publisher_path(publisher)
+      end
+    end
+  end
+
   describe 'POST #create' do
     context 'when not given a current_step' do
       it 'creates a new publisher' do
@@ -31,13 +43,15 @@ describe Spree::Admin::Mockbot::PublishersController, publish_spec: true do
         expect(publisher).to_not receive(:perform_step!)
         expect(publisher).to_not receive(:import_images)
 
-        spree_post :create, idea_id: idea.sku, publisher: { current_step: 'import_images' }
+        spree_post :create, idea_id: idea.sku,
+                            publisher: { current_step: 'import_images' }
       end
 
       it 'sets current_step' do
         expect(publisher).to receive(:current_step=).and_call_original
 
-        spree_post :create, idea_id: idea.sku, publisher: { current_step: 'import_images' }
+        spree_post :create, idea_id: idea.sku,
+                            publisher: { current_step: 'import_images' }
 
         expect(publisher.current_step).to eq 'import_images'
       end

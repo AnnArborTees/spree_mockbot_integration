@@ -1,3 +1,6 @@
-<div class="row">
-  <%= button_to "Complete!", spree.admin_mockbot_publisher_path(publisher), remote: false, method: :delete, id: 'finish-publish', form: {} %>
+<div class="alpha four columns">
+  <%= form_tag spree.admin_mockbot_publisher_path(publisher), method: :delete do %>
+    <%= hidden_field_tag 'target', spree.admin_mockbot_ideas_path %>
+    <%= submit_tag 'Complete', id: 'finish-publish' %>
+  <% end %>
 </div>

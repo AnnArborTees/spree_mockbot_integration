@@ -75,8 +75,14 @@ module Spree
         return failed
       end
 
+      def publisher
+        Publisher.where(idea_sku: sku).first
+      end
+
       def publish
-        Publisher.new
+        Publisher.new(idea_sku: sku).tap do |it|
+          it.instance_variable_set(:@idea, self)
+        end
       end
 
       def publish!(ignore_errors=false)
