@@ -65,17 +65,10 @@ module Spree
             idea.colors.each do |color|
               product = idea.product_of_color(color) || Spree::Product.new
 
-              idea.copy_to_product(product, color)
-              begin
+              protect_against_sql_error(product) do
+                idea.copy_to_product(product, color)
                 idea.assign_sku_to product
                 product.save
-              rescue Exception => sql_error
-                unless sql_error.message.starts_with?('Mysql2::Error')
-                  raise sql_error
-                end
-
-                raise_and_log product, "Couldn't generate products. "\
-                                       "#{sql_error.message}"
               end
 
               raise_if(product, !product.valid?, true) do
@@ -145,7 +138,9 @@ module Spree
           save
           raise errors.messages[:current_step] unless valid?
 
+          @step_str = str.to_s
           yield
+          @step_str = nil
 
           unless completed_steps.where(name: current_step).exists?
             completed_steps << Step.new(name: current_step)
@@ -209,6 +204,19 @@ module Spree
         def raise_and_log(product, message)
           product.log_update "ERROR: #{message}"
           raise PublishError.new(product), message
+        end
+
+        def protect_against_sql_error(product)
+          begin
+            yield
+          rescue Exception => sql_error
+            unless sql_error.message.starts_with?('Mysql2::Error')
+              raise sql_error
+            end
+
+            raise_and_log product, "Couldn't #{@step_str.humanize.downcase}. "\
+                                   "#{sql_error.message}"
+          end
         end
 
         %w(size color style).each do |pre|

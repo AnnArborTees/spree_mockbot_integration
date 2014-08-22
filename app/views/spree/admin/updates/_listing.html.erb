@@ -1,4 +1,4 @@
 <tr data-hook="admin_ideas_index_rows" class="<%= cycle('odd', 'even') %>", id="row-for-<%= update.id %>">
-  <td class="align-center"><%= update.created_at %></td>
+  <td class="align-center"><%= update.created_at.to_formatted_s(:long) %></td>
   <td class="align-center"><%= update.info %></td>
 </tr>
