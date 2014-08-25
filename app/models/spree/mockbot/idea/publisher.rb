@@ -119,8 +119,12 @@ module Spree
                 sizes.each(&curry(:add_variant).(idea, product, imprintable))
               end
 
+              product.available_on = Time.now
               product.log_update "Added variants from MockBot idea #{idea.sku}"
             end
+            
+            idea.status = 'Published'
+            idea.save
           end
         end
 

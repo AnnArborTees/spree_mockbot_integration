@@ -102,6 +102,7 @@ FactoryGirl.define do
         '0' * (4 - n.to_s.size) + n.to_s
       end
 
+      style_name 'whatever'
       common_name 'Test Style'
     end
   end

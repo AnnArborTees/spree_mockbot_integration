@@ -190,9 +190,21 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
                  sku: '6666'
         end
 
-        let!(:product_1) { build_stubbed :custom_product, name: 'First Product' }
-        let!(:product_2) { build_stubbed :custom_product, name: 'Second Product' }
-        let!(:product_3) { build_stubbed :custom_product, name: 'Third Product' }
+        let!(:product_1) do
+          build_stubbed :custom_product, 
+                        name: 'First Product',
+                        available_on: nil
+        end
+        let!(:product_2) do
+          build_stubbed :custom_product, 
+                        name: 'Second Product',
+                        available_on: nil
+        end
+        let!(:product_3) do
+          build_stubbed :custom_product, 
+                        name: 'Third Product',
+                        available_on: nil
+        end
 
         let!(:small) { create :crm_size_small, sku: '77' }
         let!(:medium) { create :crm_size_medium, sku: '44' }
@@ -299,6 +311,24 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
 
             Spree::Product.all.map(&:master).each do |master_variant|
               expect(master_variant.sku).to eq idea.sku
+            end
+          end
+
+          it 'should set the idea status to Published' do
+            publisher.generate_variants
+
+            expect(idea.status).to eq 'Published'
+          end
+
+          it 'should set available_on to now', new: true do
+            idea.associated_spree_products.each do |product|
+              expect(product.available_on).to be_nil
+            end
+
+            publisher.generate_variants
+
+            idea.associated_spree_products.each do |product|
+              expect(product.available_on).to_not be_nil
             end
           end
 

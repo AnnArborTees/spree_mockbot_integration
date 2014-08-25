@@ -6,4 +6,10 @@ Spree::Product.class_eval do
     updates << Spree::Update.new(info: info)
     info
   end
+
+  alias_method :original_destroy, :destroy
+  def destroy
+    update_attributes slug: "deleted-#{slug}"
+    original_destroy
+  end
 end
