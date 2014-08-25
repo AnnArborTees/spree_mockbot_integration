@@ -182,11 +182,11 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
         let!(:green) { create :crm_color, name: 'Green' }
         let!(:blue)  { create :crm_color, name: 'Blue' }
         let!(:crm_imprintable) do
-          create :crm_imprintable, style_name: 'Gildan 5000', sku: '5555'
+          create :crm_imprintable, common_name: 'Gildan 5000', sku: '5555'
         end
         let!(:other_crm_imprintable) do
           create :crm_imprintable, 
-                 style_name: 'American Apparel Standard or whatever',
+                 common_name: 'American Apparel Standard or whatever',
                  sku: '6666'
         end
 

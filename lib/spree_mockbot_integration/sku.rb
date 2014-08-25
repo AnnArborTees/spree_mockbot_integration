@@ -1,5 +1,10 @@
 module SpreeMockbotIntegration
   class Sku
+    class SkuError < StandardError
+      def message
+        "Error generating sku: #{super}"
+      end
+    end
     class << self
       def build(version, *args)
         builder = method "build_version_#{version}"
@@ -9,15 +14,18 @@ module SpreeMockbotIntegration
       def build_version_0(idea, imprintable_name, size_name, color_name)
         product_code = assure_product_code idea
         print_method = assure_print_method idea
-        imprintable  = find_record Spree::Crm::Imprintable, imprintable_name
-        size         = find_record Spree::Crm::Size,        size_name
-        color        = find_record Spree::Crm::Color,       color_name
+        imprintable = find_record(
+          Spree::Crm::Imprintable, :common_name, imprintable_name
+        )
+        size  = find_record(Spree::Crm::Size, :name, size_name)
+        color = find_record(Spree::Crm::Color, :name, color_name)
 
-        raise "imprintable is nil" if imprintable.nil?
-        raise "size is nil"        if size.nil?
-        raise "color is nil"       if color.nil?
+        raise SkuError, "imprintable is nil" if imprintable.nil?
+        raise SkuError, "size is nil"        if size.nil?
+        raise SkuError, "color is nil"       if color.nil?
 
-        "#{product_code}-#{print_method}#{imprintable.sku}#{size.sku}#{color.sku}"
+        "#{product_code}-"\
+        "#{print_method}#{imprintable.sku}#{size.sku}#{color.sku}"
       end
 
       private
@@ -29,7 +37,8 @@ module SpreeMockbotIntegration
         when Spree::Mockbot::Idea
           idea.sku
         else
-          raise "Expected String or Spree::Mockbot::Idea. Got #{idea.class.name}."
+          raise SkuError, "Expected String or Spree::Mockbot::Idea. "\
+                          "Got #{idea.class.name}."
         end
       end
 
@@ -43,12 +52,12 @@ module SpreeMockbotIntegration
           .base? ? 2 : 1
       end
 
-      def find_record(type, find)
-        case find
+      def find_record(type, field, value)
+        case value
         when type
-          find
+          value
         else
-          type.all(params: { find: find }).first
+          type.where(field => value).first
         end
       end
     end

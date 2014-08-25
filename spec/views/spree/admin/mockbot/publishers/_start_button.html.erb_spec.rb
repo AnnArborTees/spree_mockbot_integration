@@ -27,7 +27,7 @@ describe 'spree/admin/mockbot/publishers/_start_button.html.erb', view_spec: tru
     before(:each) { render partial: path, locals: locals }
     subject { rendered }
 
-    it { is_expected.to have_selector 'form[method="post"' }
+    it { is_expected.to have_selector 'form[method="post"]' }
     it { is_expected.to have_selector 'input[name="_method"][value="put"]' }
   end
 end

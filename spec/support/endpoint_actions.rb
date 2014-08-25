@@ -1,4 +1,7 @@
+require 'spree_mockbot_integration/quick_curry'
+
 class EndpointActions
+  extend SpreeMockbotIntegration::QuickCurry
   class << self
     attr_accessor :do_authentication
 
@@ -7,13 +10,10 @@ class EndpointActions
       expected_email = options[:email]
       expected_token = options[:token]
 
-      auth = method(:authenticate).to_proc.curry.(
-        'Mockbot', expected_email, expected_token
-      )
+      auth = curry(:authenticate).('Mockbot', expected_email, expected_token)
 
       idea_stub.mock_response(:get, '.json', &method(:idea_index))
       idea_stub.override_response(:get, '/:id.json', &method(:idea_show))
-      # idea_stub.override_response(:put, '/:id.json', &method(:idea_show))
       idea_stub.override_all(&to_authenticate_with(auth))
     end
 
@@ -22,9 +22,7 @@ class EndpointActions
       expected_email = options[:email]
       expected_token = options[:token]
 
-      auth = method(:authenticate).to_proc.curry.(
-        'Crm', expected_email, expected_token
-      )
+      auth = curry(:authenticate).('Crm', expected_email, expected_token)
 
       size_stub.override_response(:get, '.json', &method(:size_index))
       size_stub.override_all(&to_authenticate_with(auth))
@@ -36,12 +34,8 @@ class EndpointActions
       expected_email = options[:email]
       expected_token = options[:token]
       
-      auth = method(:authenticate).to_proc.curry.(
-        'Crm', expected_email, expected_token
-      )
+      auth = curry(:authenticate).('Crm', expected_email, expected_token)
 
-      # Allow us to grab colors by name
-      color_stub.override_response(:get, '.json', &method(:color_index))
       color_stub.override_all(&to_authenticate_with(auth))
     end
 
@@ -51,12 +45,8 @@ class EndpointActions
       expected_email = options[:email]
       expected_token = options[:token]
       
-      auth = method(:authenticate).to_proc.curry.(
-        'Crm', expected_email, expected_token
-      )
+      auth = curry(:authenticate).('Crm', expected_email, expected_token)
 
-      # Allow us to grab imprintables by name ( TODO change from name to whatever else )
-      imprintable_stub.override_response(:get, '.json', &method(:imprintable_index))
       imprintable_stub.override_all(&to_authenticate_with(auth))
     end
 
@@ -95,40 +85,23 @@ class EndpointActions
         {
           body: if query['imprintable'] == "Gildan 5000"
             if query['color'] == 'Blue'
-              [{ id: 3, name: 'Large', sku: '03' }, { id: 4, name: 'Extra Large', sku: '04' }]
+              [
+                { id: 3, name: 'Large', sku: '03' },
+                { id: 4, name: 'Extra Large', sku: '04' }
+              ]
             else
-              [{ id: 1, name: 'Small', sku: '77' }, { id: 2, name: 'Medium', sku: '44' }]
+              [
+                { id: 1, name: 'Small', sku: '77' },
+                { id: 2, name: 'Medium', sku: '44' }
+              ]
             end
           else
-            [{ id: 2, name: 'Medium', sku: '44' }, { id: 3, name: 'Large', sku: '03' }]
+            [
+              { id: 2, name: 'Medium', sku: '44' },
+              { id: 3, name: 'Large', sku: '03' }
+            ]
           end
         }
-      elsif query['find']
-        response = supr.call
-        response[:body] = response[:body].select { |r| r['name'].downcase == query['find'].downcase }
-        response
-      else
-        supr.call
-      end
-    end
-
-    def color_index(request, params, stub, &supr)
-      query = request.uri.query_values
-      if query['find']
-        response = supr.call
-        response[:body] = response[:body].select { |r| r['name'].downcase == query['find'].downcase }
-        response
-      else
-        supr.call
-      end
-    end
-
-    def imprintable_index(request, params, stub, &supr)
-      query = request.uri.query_values
-      if query['find']
-        response = supr.call
-        response[:body] = response[:body].select { |r| r['style_name'].downcase == query['find'].downcase }
-        response
       else
         supr.call
       end

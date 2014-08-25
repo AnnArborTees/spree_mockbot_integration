@@ -1,3 +1,5 @@
+require 'spree_mockbot_integration/quick_curry'
+
 module Spree
   module Mockbot
     class Idea < ActiveResource::Base
@@ -10,6 +12,8 @@ module Spree
       end
 
       class Publisher < ActiveRecord::Base
+        include SpreeMockbotIntegration::QuickCurry
+
         self.table_name = 'spree_mockbot_publishers'
 
         def self.steps
@@ -148,10 +152,6 @@ module Spree
         end
 
         private
-
-        def curry(method_name)
-          method(method_name).to_proc.curry
-        end
 
         def add_to_set(set)
           lambda do |item|
