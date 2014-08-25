@@ -88,11 +88,16 @@ module Spree
         def import_images
           step :import_images do
             idea.associated_spree_products.each do |product|
-              failed = idea.copy_images_to product
+              color = color_of_product(idea, product)
+              succeeded, failed = idea.copy_images_to product, color
 
               raise_if(product, !failed.empty?, true) do
                 "Failed to import #{failed.size} images to product "\
                 "#{product.master.sku}"
+              end
+
+              raise_if(product, succeeded.empty?, true) do
+                "Idea #{idea} has no images for the color #{color.name}."
               end
 
               product.log_update "Grabbed image data from MockBot idea #{idea.sku}"

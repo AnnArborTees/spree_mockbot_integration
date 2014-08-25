@@ -5,7 +5,7 @@ FactoryGirl.define do
   # require 'spree_mockbot_integration/factories'
   FactoryGirl.define do
     Color = Struct.new(:name, :sku)
-    Mockup = Struct.new(:file_url, :description)
+    Mockup = Struct.new(:file_url, :description, :color)
     Imprintable = Struct.new(:name, :common_name, :sku)
 
     factory :mockbot_idea, class: Spree::Mockbot::Idea do
@@ -56,10 +56,40 @@ FactoryGirl.define do
 
         factory :mockbot_idea_with_images do
           status 'Published'
-          mockups [Mockup.new("http://test-file-url.com/test_files/#{(1..10).to_a.sample}.png",     
-                              "Test Description")]
-          thumbnails [Mockup.new("http://test-file-url.com/test_thumbs/#{(1..10).to_a.sample}.png", 
-                              "Test Description")]
+          mockups [
+              Mockup.new(
+                "http://test-file-url.com/test_files/#{(1..10).to_a.sample}.png",
+                "Test Description For Red",
+                Color.new("Red")
+              ),
+              Mockup.new(
+                "http://test-file-url.com/test_files/#{(1..10).to_a.sample}.png",
+                "Test Blue Descript",
+                Color.new("Blue")
+              ),
+              Mockup.new(
+                "http://test-file-url.com/test_files/#{(1..10).to_a.sample}.png",
+                "Test Green One Finally",
+                Color.new("Green")
+              )
+            ]
+          thumbnails [
+              Mockup.new(
+                "http://test-file-url.com/test_thumbs/#{(1..10).to_a.sample}.png",
+                "Test Description",
+                Color.new("Red")
+              ),
+              Mockup.new(
+                "http://test-file-url.com/test_thumbs/#{(1..10).to_a.sample}.png",
+                "Test Description",
+                Color.new("Blue")
+              ),
+              Mockup.new(
+                "http://test-file-url.com/test_files/#{(1..10).to_a.sample}.png",
+                "Hella Green Thumbnail",
+                Color.new("Green")
+              )
+            ]
         end
       end
     end

@@ -54,11 +54,12 @@ module Spree
         return product
       end
 
-      def copy_images_to(product)
+      def copy_images_to(product, color)
         product.images.destroy_all
 
         failed = []
-        copy = lambda do |is_thumbnail, mockup|
+        succeeded = []
+        copy_over = lambda do |is_thumbnail, mockup|
           image            = Spree::Image.new
           image.attachment = open mockup_url mockup
           image.position   = is_thumbnail ? 0 : product.images.count
@@ -66,13 +67,17 @@ module Spree
 
           product.images << image
           image.save
-          failed << image unless image.valid?
+          (image.valid? ? succeeded : failed) << image
         end
           .curry
 
-        mockups.each(&copy[false])
-        thumbnails.each(&copy[true])
-        return failed
+        correct_color = lambda do |item|
+          item.color.name.downcase == color_str(color).downcase
+        end
+
+        mockups.select(&correct_color).each(&copy_over[false])
+        thumbnails.select(&correct_color).each(&copy_over[true])
+        return succeeded, failed
       end
 
       def publisher

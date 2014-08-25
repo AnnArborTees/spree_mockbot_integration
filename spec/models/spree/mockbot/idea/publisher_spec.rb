@@ -148,6 +148,10 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
           idea.associated_spree_products.each do |product|
             expect(product.images.count).to eq 2
           end
+          expect(
+            idea.associated_spree_products.flat_map(&:images)
+          )
+            .to eq idea.associated_spree_products.flat_map(&:images).uniq
         end
 
         it 'should add "import_images" to completed_steps', compl: true do
@@ -158,15 +162,14 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
             .to include 'import_images'
         end
 
-        it 'should filter the images based on color', 
-          pending: "Figure out how to do this from actual Mockbot data"
-
         context 'when images fail to import', error_test: true do
           before :each do
             allow(idea).to receive(:associated_spree_products)
               .and_return([dummy_product])
             
-            allow(idea).to receive(:copy_images_to).and_return [Object.new] * 3
+            allow(idea).to receive(:copy_images_to) do
+              [[], [Object.new] * 3]
+            end
           end
 
           it 'logs an update to the product and raises a PublishError' do
