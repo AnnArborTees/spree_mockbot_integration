@@ -19,7 +19,7 @@ describe 'spree/admin/mockbot/publishers/_start_button.html.erb', view_spec: tru
     before(:each) { render partial: path, locals: { idea: idea } }
     subject { rendered }
 
-    it { is_expected.to have_selector 'form:not(.js-hide-me)' }
+    it { is_expected.to have_selector 'form[method="post"]' }
     it { is_expected.to_not have_selector 'input[name="_method"][value="put"]' }
   end
 
@@ -27,7 +27,7 @@ describe 'spree/admin/mockbot/publishers/_start_button.html.erb', view_spec: tru
     before(:each) { render partial: path, locals: locals }
     subject { rendered }
 
-    it { is_expected.to have_selector 'form.js-hide-me' }
+    it { is_expected.to have_selector 'form[method="post"' }
     it { is_expected.to have_selector 'input[name="_method"][value="put"]' }
   end
 end

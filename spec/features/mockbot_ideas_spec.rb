@@ -22,7 +22,7 @@ feature 'Mockbot Ideas' do
 
     context 'publishing ideas', image: true do
       let!(:idea0) { create :mockbot_idea_with_images, status: 'Ready to Publish' }
-      let!(:idea1) { create :mockbot_idea_with_images, status: 'Ready to Publish' }
+      let!(:idea1) { create :mockbot_idea_with_images, status: 'Awaiting Signoff' }
       let!(:idea2) { create :mockbot_idea_with_images, status: 'Published' }
 
       let!(:red)   { create :crm_color, name: 'Red', sku: '111' }
@@ -39,7 +39,7 @@ feature 'Mockbot Ideas' do
 
       before(:each) { WebMockApi.stub_test_image! }
 
-      scenario 'Clicking the publish button takes me to the publish page' do
+      scenario 'Clicking the publish button takes me to the publish page', now: true do
         visit spree.admin_mockbot_ideas_path
 
         original_all = Spree::Mockbot::Idea.all
@@ -47,9 +47,10 @@ feature 'Mockbot Ideas' do
 
         allow(Spree::Mockbot::Idea).to receive(:find).and_return idea1
         allow(idea1).to receive(:http_response).and_return({})
-        allow(idea0).to receive(:status).and_return 'Ready to Publish'
+        idea0.status = 'Published'
+        idea0.save
         
-        click_button 'Publish'
+        click_link 'Publish'
 
         expect(page).to have_content 'Generate products'
         expect(page).to have_content 'Import images'
@@ -102,9 +103,45 @@ feature 'Mockbot Ideas' do
         expect(Spree::Mockbot::Idea::Publisher.count).to eq 0
       end
 
-      scenario 'I can exit mid-way, then resume publishing'
+      scenario 'I can exit mid-way, then resume publishing' do
+        visit spree.admin_new_idea_publisher_path(idea0.sku)
 
-      scenario 'When something does wrong, I see an error'
+        2.times { click_button 'Start' }
+        click_link '<- Idea List'
+
+        visit spree.admin_new_idea_publisher_path(idea0.sku)
+
+        2.times { click_button 'Start' }
+        click_button 'Complete'
+
+        expect(Spree::Product.count).to eq 3
+        expect(Spree::Variant.count).to eq 3 * 5
+        expect(Spree::Mockbot::Idea::Publisher.count).to eq 0
+      end
+
+      scenario 'When something goes wrong, I see an error' do
+        allow_any_instance_of(Spree::Mockbot::Idea::Publisher)
+          .to receive(:generate_products)
+          .and_raise Spree::Mockbot::Idea::PublishError.new(nil)
+
+        visit spree.admin_new_idea_publisher_path(idea0.sku)
+
+        2.times { click_button 'Start' }
+
+        expect(page).to have_content 'Failed to generate products:'
+      end
+
+      scenario 'I can cancel publishing' do
+        visit spree.admin_new_idea_publisher_path(idea0.sku)
+
+        2.times { click_button 'Start' }
+
+        expect(Spree::Mockbot::Idea::Publisher.count).to eq 1
+
+        click_button 'Cancel'
+
+        expect(Spree::Mockbot::Idea::Publisher.count).to eq 0
+      end
 
       context 'old', pending: true do
         scenario 'I can publish a publishable idea, and see the product on the product page' do

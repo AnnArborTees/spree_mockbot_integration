@@ -132,6 +132,7 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
           end
 
           it 'logs an update to the product and raises a PublishError' do
+            allow(dummy_product).to receive(:save)
             expect(dummy_product).to receive(:log_update)
 
             expect{publisher.generate_products}.to raise_error publish_error
@@ -231,7 +232,7 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
               .to include 'generate_variants'
           end
 
-          it 'should create the relevant option types and option values', go: true do
+          it 'should create the relevant option types and option values' do
             publisher.generate_variants
 
             size_type  = Spree::OptionType.where(name: 'apparel-size')

@@ -13,7 +13,7 @@ class EndpointActions
 
       idea_stub.mock_response(:get, '.json', &method(:idea_index))
       idea_stub.override_response(:get, '/:id.json', &method(:idea_show))
-      idea_stub.override_response(:put, '/:id.json', &method(:idea_show))
+      # idea_stub.override_response(:put, '/:id.json', &method(:idea_show))
       idea_stub.override_all(&to_authenticate_with(auth))
     end
 
