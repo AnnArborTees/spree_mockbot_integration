@@ -88,19 +88,24 @@ module Spree
         def import_images
           step :import_images do
             idea.associated_spree_products.each do |product|
-              color = color_of_product(idea, product)
-              succeeded, failed = idea.copy_images_to product, color
+              begin
+                color = color_of_product(idea, product)
+                succeeded, failed = idea.copy_images_to product, color
 
-              raise_if(product, !failed.empty?, true) do
-                "Failed to import #{failed.size} images to product "\
-                "#{product.master.sku}"
+                raise_if(product, !failed.empty?, true) do
+                  "Failed to import #{failed.size} images to product "\
+                  "#{product.master.sku}"
+                end
+
+                raise_if(product, succeeded.empty?, true) do
+                  "Idea #{idea} has no images for the color "\
+                  "'#{color.try(:name)}'."
+                end
+
+                product.log_update "Grabbed image data from MockBot idea #{idea.sku}"
+              rescue StandardError => e
+                raise_and_log product, "Uncaught #{e.class.name}: #{e.message}"
               end
-
-              raise_if(product, succeeded.empty?, true) do
-                "Idea #{idea} has no images for the color #{color.name}."
-              end
-
-              product.log_update "Grabbed image data from MockBot idea #{idea.sku}"
             end
           end
         end
@@ -116,12 +121,34 @@ module Spree
               each_option_type(&add_to_set(product.option_types))
 
               idea.imprintables.each do |imprintable|
-                sizes = Spree::Crm::Size.all params: {
+                sizes = Spree::Crm::Size.where(
                     imprintable: imprintable.name,
                           color: product_color.name
-                  }
+                  )
 
-                sizes.each(&curry(:add_variant).(idea, product, imprintable))
+                # HACK ActiveResource won't throw an error on 404, 
+                # so I have to begin/rescue over these operations in
+                # order to catch it.
+                begin
+                  unless sizes.any?
+                    raise_and_log(
+                      product,
+                      "No sizes matched the imprintable with common name '"\
+                      "#{imprintable.name}' "\
+                      "and the color name '#{product_color.name}'"
+                    )
+                  end
+
+                  sizes.each(&curry(:add_variant).(idea, product, imprintable))
+                
+                rescue NoMethodError
+                  raise_and_log(
+                    product,
+                    "Either the imprintable with common name "\
+                    "'#{imprintable.name}', or the color "\
+                    "'#{product_color.name}' could not be found in the CRM."
+                  )
+                end
               end
 
               product.available_on = Time.now
@@ -189,7 +216,7 @@ module Spree
           variant.option_values << option_value(style_type, imprintable.name)
 
           raise_if(product, !variant.valid? || !product.valid?, true) do
-            "Error adding variant to #{product.name} (#{variant.sku}). "\
+            "Couldn't add variant to #{product.name} (#{variant.sku}). "\
             "Product errors include: #{product.errors.full_messages}. "\
             "Variant errors include: #{variant.errors.full_messages}"
           end
@@ -206,12 +233,16 @@ module Spree
                         end
 
           message = yield
-          object.log_update "ERROR: #{message}" if log
+          if log
+            object.log_update "ERROR: Failed to "\
+                              "#{current_step.humanize.downcase}: #{message}"
+          end
           raise PublishError.new(object), message
         end
 
         def raise_and_log(product, message)
-          product.log_update "ERROR: #{message}"
+          product.log_update "ERROR: Failed to "\
+                             "#{current_step.humanize.downcase}: #{message}"
           raise PublishError.new(product), message
         end
 

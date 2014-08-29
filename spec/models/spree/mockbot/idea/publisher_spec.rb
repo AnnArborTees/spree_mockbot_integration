@@ -167,9 +167,8 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
             allow(idea).to receive(:associated_spree_products)
               .and_return([dummy_product])
             
-            allow(idea).to receive(:copy_images_to) do
-              [[], [Object.new] * 3]
-            end
+            allow(idea).to receive(:copy_images_to)
+              .and_return [[], [Object.new] * 3]
           end
 
           it 'logs an update to the product and raises a PublishError' do

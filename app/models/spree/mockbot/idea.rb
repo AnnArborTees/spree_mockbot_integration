@@ -71,8 +71,12 @@ module Spree
         end
           .curry
 
-        correct_color = lambda do |item|
-          item.color.name.downcase == color_str(color).downcase
+        correct_color = lambda do |image|
+          if image.respond_to?(:name)
+            image.color.name.downcase == color_str(color).downcase
+          else
+            return failed << image
+          end
         end
 
         mockups.select(&correct_color).each(&copy_over[false])
@@ -113,17 +117,7 @@ module Spree
       end
 
       def mockup_url(mockup)
-        if Rails.env.test?
-          mockup.file_url
-        else
-          # TODO FRIDAYYYY
-          # Maybe figure this out. Otherwise the last thing you did was 
-          # make Publisher.step_after return done after the last step.
-          # So I guess you should make the views give a completion dialog
-          # / button or whatever. Perhaps make the javascript happen.
-          # Views for updates, perhaps? Any of this stuff.
-          raise "What the hell should this be?"
-        end
+        mockup.file_url
       end
     end
   end
