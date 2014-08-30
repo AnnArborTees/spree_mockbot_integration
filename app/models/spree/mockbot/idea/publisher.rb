@@ -36,7 +36,13 @@ module Spree
                                  message: "unknown step '%{value}'." }
 
         def idea
-          @idea ||= Spree::Mockbot::Idea.find(idea_sku)
+          begin
+            @idea ||= Spree::Mockbot::Idea.find(idea_sku)
+          rescue ActiveResource::ServerError
+            raise PublishError.new(nil), "Something went wrong on Mockbot's "\
+                                         "end, and the idea could not be "\
+                                         "retrieved."
+          end
         end
 
         def current_step=(step)
@@ -169,11 +175,23 @@ module Spree
               end
 
               product.available_on = Time.now
-              product.log_update "Added variants from MockBot idea #{idea.sku}"
+              if product.save
+                product.log_update "Added variants from MockBot idea #{idea.sku}"
+              else
+                raise_and_log product, "Failed to update the product's "\
+                                       "availability."
+              end
             end
             
-            idea.status = 'Published'
-            idea.save
+            begin
+              idea.update_attributes status: 'Published'
+            rescue ActiveResource::ServerError
+              raise PublishError.new(idea), 
+                                  "Something went wrong on MockBot's end, and "\
+                                  "the idea's status couldn't be set to "\
+                                  "'Published'. The products published "\
+                                  "successfully, however."
+            end
           end
         end
 

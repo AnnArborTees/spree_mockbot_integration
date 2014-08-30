@@ -2,7 +2,7 @@
 $('.step-error').remove();
 $('.steps-container').after("<div class='row step-error'><%= @error %></div>");
 $('#start-publish').show();
-$('#publish-step-<%= @publisher.current_step_number -%> .progress-dots').hide();
+$('#publish-step-<%= @publisher.current_step_number -%> .progress-dots').addClass('hidden-dots');
 <% else %>
   $('.step-error').remove();
   $('#start-publish').hide();

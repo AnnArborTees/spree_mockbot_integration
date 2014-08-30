@@ -18,7 +18,7 @@ $(document).ready(function () {
     }, 300);
 
     $('#start-publish').click(function() {
-      $('.publish-step.active > .progress-dots').show();
+      $('.publish-step.active > .progress-dots').removeClass('hidden-dots');
       return true;
     });
   }
