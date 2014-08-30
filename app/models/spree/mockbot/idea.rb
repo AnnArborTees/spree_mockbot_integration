@@ -55,6 +55,10 @@ module Spree
       end
 
       def copy_images_to(product, color)
+        unless color.is_a?(String) || color.respond_to?(:name)
+          raise "Color must be a string or have a name"
+        end
+
         product.images.destroy_all
 
         failed = []
@@ -72,7 +76,7 @@ module Spree
           .curry
 
         correct_color = lambda do |image|
-          if image.respond_to?(:name)
+          if image.try(:color).respond_to?(:name)
             image.color.name.downcase == color_str(color).downcase
           else
             return failed << image

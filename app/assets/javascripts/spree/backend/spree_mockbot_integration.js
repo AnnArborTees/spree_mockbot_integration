@@ -16,6 +16,11 @@ $(document).ready(function () {
 
       $('.progress-dots').text(dotStr);
     }, 300);
+
+    $('#start-publish').click(function() {
+      $('.publish-step.active > .progress-dots').show();
+      return true;
+    });
   }
 
 });

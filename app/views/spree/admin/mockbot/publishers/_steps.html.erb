@@ -13,7 +13,7 @@
       <div class='publish-content'>
         <%= step.to_s.humanize %>
       </div>
-      <div class='progress-dots'>
+      <div class='progress-dots' style="<%= local_assigns[:publisher].try(:current_step) == step ? 'display: none;' : '' %>">
         ...
       </div>
     </div>

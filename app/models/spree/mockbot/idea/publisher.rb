@@ -69,6 +69,12 @@ module Spree
             idea.colors.each do |color|
               product = idea.product_of_color(color) || Spree::Product.new
 
+              raise_if(
+                product,
+                idea.base_price.nil? || idea.base_price.try(:zero?),
+                true
+              ) { "Idea must have a base price in order to be published." }
+
               protect_against_sql_error(product) do
                 idea.copy_to_product(product, color)
                 idea.assign_sku_to product
@@ -90,17 +96,26 @@ module Spree
             idea.associated_spree_products.each do |product|
               begin
                 color = color_of_product(idea, product)
+                raise_if(product, color.nil?, true) do
+                  "No color in idea #{idea.sku} found to match product "\
+                  "#{product.slug}. Idea colors include: "\
+                  "#{idea.colors.map(&:name).join(', ')}"
+                end
                 succeeded, failed = idea.copy_images_to product, color
 
                 raise_if(product, !failed.empty?, true) do
                   "Failed to import #{failed.size} images to product "\
-                  "#{product.master.sku}"
+                  "#{product.master.sku}."
                 end
 
                 raise_if(product, succeeded.empty?, true) do
                   "Idea #{idea} has no images for the color "\
                   "'#{color.try(:name)}'."
                 end
+
+                # TODO Saturday? Wednesday?
+                # You're working on getting this stuff to actually work with crm
+                # Currently, you are being given shit by activeresource.
 
                 product.log_update "Grabbed image data from MockBot idea #{idea.sku}"
               rescue StandardError => e
@@ -122,7 +137,7 @@ module Spree
 
               idea.imprintables.each do |imprintable|
                 sizes = Spree::Crm::Size.where(
-                    imprintable: imprintable.name,
+                    imprintable: imprintable.common_name,
                           color: product_color.name
                   )
 
@@ -134,8 +149,10 @@ module Spree
                     raise_and_log(
                       product,
                       "No sizes matched the imprintable with common name '"\
-                      "#{imprintable.name}' "\
-                      "and the color name '#{product_color.name}'"
+                      "#{imprintable.common_name}' "\
+                      "and the color '#{product_color.name}' in CRM. "\
+                      "Check the imprintable variants for "\
+                      "'#{imprintable.common_name}'."
                     )
                   end
 
@@ -146,7 +163,7 @@ module Spree
                     product,
                     "Either the imprintable with common name "\
                     "'#{imprintable.name}', or the color "\
-                    "'#{product_color.name}' could not be found in the CRM."
+                    "'#{product_color.name}' could not be found in CRM."
                   )
                 end
               end
