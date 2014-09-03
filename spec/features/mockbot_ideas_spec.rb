@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 feature 'Mockbot Ideas' do
-  context 'as admin user' do
+  context 'as an admin user' do
     stub_authorization!
 
     before(:each) do
@@ -141,38 +141,6 @@ feature 'Mockbot Ideas' do
         click_button 'Cancel'
 
         expect(Spree::Mockbot::Idea::Publisher.count).to eq 0
-      end
-
-      context 'old', pending: true do
-        scenario 'I can publish a publishable idea, and see the product on the product page' do
-          visit spree.admin_mockbot_ideas_path
-
-          original_all = Spree::Mockbot::Idea.all
-          allow(Spree::Mockbot::Idea).to receive(:all).and_return(original_all)
-
-          allow(Spree::Mockbot::Idea).to receive(:find).and_return idea1
-          allow(idea1).to receive(:http_response).and_return({})
-          click_button 'Publish'
-
-          expect(page).to have_content 'Published'
-          visit spree.admin_products_path
-          expect(page).to have_content idea1.sku
-        end
-
-        scenario 'I can re-publish an already published idea' do
-          visit spree.admin_mockbot_ideas_path
-
-          original_all = Spree::Mockbot::Idea.all
-          allow(Spree::Mockbot::Idea).to receive(:all).and_return(original_all)
-
-          allow(Spree::Mockbot::Idea).to receive(:find).and_return idea2
-          allow(idea2).to receive(:http_response).and_return({})
-          click_button 'Republish'
-
-          expect(page).to have_content 'Published'
-          visit spree.admin_products_path
-          expect(page).to have_content idea2.sku
-        end
       end
     end
   end

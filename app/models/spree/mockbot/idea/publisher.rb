@@ -119,12 +119,9 @@ module Spree
                   "'#{color.try(:name)}'."
                 end
 
-                # TODO Saturday? Wednesday?
-                # You're working on getting this stuff to actually work with crm
-                # Currently, you are being given shit by activeresource.
-
                 product.log_update "Grabbed image data from MockBot idea #{idea.sku}"
               rescue StandardError => e
+                raise e if e.is_a? PublishError
                 raise_and_log product, "Uncaught #{e.class.name}: #{e.message}"
               end
             end
@@ -149,7 +146,7 @@ module Spree
 
                 # HACK ActiveResource won't throw an error on 404, 
                 # so I have to begin/rescue over these operations in
-                # order to catch it.
+                # order to deal with it.
                 begin
                   unless sizes.any?
                     raise_and_log(

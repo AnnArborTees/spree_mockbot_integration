@@ -44,9 +44,9 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
     let!(:idea) { create :mockbot_idea_with_images }
 
     describe 'Step methods' do
-      let!(:size_small)  { create :crm_size_small }
-      let!(:size_medium) { create :crm_size_medium }
-      let!(:size_large)  { create :crm_size_large }
+      let!(:size_small)  { create :crm_size_small, sku: 01 }
+      let!(:size_medium) { create :crm_size_medium, sku: 02 }
+      let!(:size_large)  { create :crm_size_large, sku: 03 }
       let(:publisher) do
         create(:mockbot_idea_publisher, idea_sku: idea.sku).tap do |p|
           allow(p).to receive(:idea).and_return idea
@@ -208,8 +208,8 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
                         available_on: nil
         end
 
-        let!(:small) { create :crm_size_small, sku: '77' }
-        let!(:medium) { create :crm_size_medium, sku: '44' }
+        # let!(:small) { create :crm_size_small, sku: '77' }
+        # let!(:medium) { create :crm_size_medium, sku: '44' }
 
         context 'when the idea has products' do
           before :each do
@@ -224,6 +224,10 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
               else raise "darn!"
               end
             }
+
+            [product_1, product_2, product_3].each do |product|
+              allow(product).to receive(:save).and_return true
+            end
           end
 
           it "should create variants for the idea's products" do
@@ -264,7 +268,6 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
             size_type.first.option_values.map(&:name).tap do |sizes|
               expect(sizes).to include "medium"
               expect(sizes).to include "large"
-              expect(sizes).to include "extra large"
               expect(sizes).to_not include "red"
               expect(sizes).to_not include "green"
               expect(sizes).to_not include "blue"
@@ -282,7 +285,7 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
             end
           end
 
-          it 'should format the sku using sku version 0' do
+          it 'should format the sku using sku version 0', bs: true do
             2.times { idea.colors.pop }
             idea.imprintables.pop
 
@@ -298,13 +301,13 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
             publisher.generate_variants
             expect(product.variants.size).to eq 2
 
-            expect(product.variants.has_option('apparel-size', 'small').size).to eq 1
-            product.variants.has_option('apparel-size', 'small').first.tap do |small|
-              expect(small.sku).to eq "0-#{idea.sku}-2555577111"
-            end
             expect(product.variants.has_option('apparel-size', 'medium').size).to eq 1
             product.variants.has_option('apparel-size', 'medium').first.tap do |medium|
               expect(medium.sku).to eq "0-#{idea.sku}-2555544111"
+            end
+            expect(product.variants.has_option('apparel-size', 'large').size).to eq 1
+            product.variants.has_option('apparel-size', 'large').first.tap do |large|
+              expect(large.sku).to eq "0-#{idea.sku}-2555503111"
             end
           end
 

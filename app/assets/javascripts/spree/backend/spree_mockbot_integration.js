@@ -23,6 +23,13 @@ $(document).ready(function () {
     });
   }
 
+  $('a').click(function() {
+    if ($(this).prop('disabled'))
+      return false;
+    else
+      return true;
+  });
+
 });
 
 var MockbotPublish = {

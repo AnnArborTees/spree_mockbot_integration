@@ -98,11 +98,6 @@ module Spree
         end
       end
 
-      def publish!(ignore_errors=false)
-        raise "Phasing out publish! for publish."
-        
-      end
-
       def assign_sku_to(product)
         if product.master
           product.master.tap do |master|

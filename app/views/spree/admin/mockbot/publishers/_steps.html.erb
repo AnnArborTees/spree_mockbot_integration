@@ -1,19 +1,19 @@
 <div class='row steps-container'>
   <% Spree::Mockbot::Idea::Publisher.steps.each_with_index do |step, i| %>
-  <% completed = local_assigns[:publisher].try(:completed?, step) %>
+    <% completed = local_assigns[:publisher].try(:completed?, step) %>
 
     <div id='publish-step-<%=i+1%>'
          class='publish-step alpha three columns 
-         step-<%= local_assigns[:publisher].try(:current_step) -%>
-         <%= local_assigns[:publisher].try(:current_step) == step ? 'active' : '' %>
-         <%= completed ? 'complete' : '' %>'>
+           step-<%= local_assigns[:publisher].try(:current_step) -%>
+           <%= local_assigns[:publisher].try(:current_step) == step ? 'active' : '' %>
+           <%= completed ? 'complete' : '' %>'>
       
       <i class='icon-<%= completed ? "check" : "play" %>'></i>
 
       <div class='publish-content'>
         <%= step.to_s.humanize %>
       </div>
-      <div class='progress-dots' style="<%= local_assigns[:publisher].try(:current_step) == step ? 'display: none;' : '' %>">
+      <div class="progress-dots <%= local_assigns[:publisher].try(:current_step) == step ? 'hidden-dots' : '' %>">
         ...
       </div>
     </div>
