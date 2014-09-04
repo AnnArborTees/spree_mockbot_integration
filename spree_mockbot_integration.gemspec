@@ -2,7 +2,7 @@
 Gem::Specification.new do |s|
   s.platform    = Gem::Platform::RUBY
   s.name        = 'spree_mockbot_integration'
-  s.version     = '2.2.0'
+  s.version     = '2.2.01'
   s.summary     = 'Spree Mockbot Integration'
   s.description = 'Link up MockBot product publisher with Ann Arbor Tees Store'
   s.required_ruby_version = '>= 1.9.3'
