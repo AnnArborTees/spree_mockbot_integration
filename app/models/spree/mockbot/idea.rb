@@ -2,12 +2,12 @@ module Spree
   module Mockbot
     class Idea < ActiveResource::Base
       include RemoteModel
-      
+
       self.settings_class = MockbotSettings
       authenticates_with_email_and_token
       add_response_method :http_response
       self.collection_parser = ::ActiveResourcePagination::PaginatedCollection
-      
+
       def associated_spree_products
         Spree::Product
           .where(spree_variants: {sku: self.sku})
@@ -30,6 +30,7 @@ module Spree
       def product_name(color=nil)
         "#{working_name} #{product_type}"
       end
+
       def product_slug(color)
         "#{sku}-#{color_str(color).underscore}"
       end
