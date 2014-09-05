@@ -15,6 +15,7 @@ Gem::Specification.new do |s|
   s.requirements << 'none'
 
   s.add_dependency 'spree_core', '~> 2.2.0'
+  s.add_dependency 'spree_annarbortees_theme', '~> 2.2.0'
   s.add_dependency 'activeresource-response'
   s.add_dependency 'activeresource'
   s.add_dependency 'figaro'
