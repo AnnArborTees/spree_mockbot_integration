@@ -70,7 +70,7 @@ module Spree
 
         def generate_products
           raise_if(idea, idea.colors.empty?) { "Idea has no colors" }
-          
+
           step :generate_products do
             idea.colors.each do |color|
               product = idea.product_of_color(color) || Spree::Product.new
@@ -144,7 +144,7 @@ module Spree
                           color: product_color.name
                   )
 
-                # HACK ActiveResource won't throw an error on 404, 
+                # HACK ActiveResource won't throw an error on 404,
                 # so I have to begin/rescue over these operations in
                 # order to deal with it.
                 begin
@@ -160,7 +160,7 @@ module Spree
                   end
 
                   sizes.each(&curry(:add_variant).(idea, product, imprintable))
-                
+
                 rescue NoMethodError
                   raise_and_log(
                     product,
@@ -178,12 +178,21 @@ module Spree
                 raise_and_log product, "Failed to update the product's "\
                                        "availability."
               end
+
+              product.layout = 'imprinted_apparel'
+              if product.save
+                product.log_update "Assigned product.layout 'imprinted_apparel' to  #{idea.sku}"
+              else
+                raise_and_log product, "Failed to update the product's "\
+                                       "layout."
+              end
+
             end
-            
+
             begin
               idea.update_attributes status: 'Published'
             rescue ActiveResource::ServerError
-              raise PublishError.new(idea), 
+              raise PublishError.new(idea),
                                   "Something went wrong on MockBot's end, and "\
                                   "the idea's status couldn't be set to "\
                                   "'Published'. The products published "\
@@ -232,10 +241,10 @@ module Spree
           color = option_value color_type, product_color.name
 
           variant = Spree::Variant.new
-          
+
           begin
             variant.sku = SpreeMockbotIntegration::Sku.build(
-                0, idea, imprintable.name, size, product_color.name
+                0, idea, imprintable.common_name, size, product_color.name
               )
           rescue RuntimeError => e
             raise PublishError.new(imprintable), e.message
@@ -243,9 +252,9 @@ module Spree
 
           product.variants << variant
 
-          variant.option_values << option_value(size_type, size.name)
+          variant.option_values << option_value(size_type, size.name, size.display_value)
           variant.option_values << option_value(color_type, color.name)
-          variant.option_values << option_value(style_type, imprintable.name)
+          variant.option_values << option_value(style_type, imprintable.common_name)
 
           raise_if(product, !variant.valid? || !product.valid?, true) do
             "Couldn't add variant to #{product.name} (#{variant.sku}). "\
@@ -286,7 +295,7 @@ module Spree
               raise sql_error
             end
 
-            raise_and_log product, 
+            raise_and_log product,
               "Couldn't #{current_step.humanize.downcase}. "\
               "#{sql_error.message}"
           end
@@ -323,11 +332,12 @@ module Spree
           end
         end
 
-        def option_value(type, value)
+        def option_value(type, value, presentation = nil)
+          presentation = value unless !presentation.nil?
           assure(Spree::OptionValue,
             option_type_id: option_type(type).id,
-            name:           value.underscore,
-            presentation:   value
+            name:           value,
+            presentation:   presentation
           )
         end
 
