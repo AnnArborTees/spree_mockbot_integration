@@ -14,9 +14,9 @@ module Spree::Admin::Mockbot::IdeasHelper
 
   def import_idea_to_product_link(idea)
     publish_path = spree.admin_new_idea_publisher_path(idea.sku)
-    if idea.status == 'Ready to Publish'
+    if idea.status == 'ready_to_publish'
       link_to 'Publish', publish_path, class: 'button'
-    elsif idea.status == 'Published'
+    elsif idea.status == 'published'
       link_to 'Republish', publish_path, class: 'button'
     else
       link_to "Can't publish yet", publish_path, disabled: 'disabled', class: 'button'
