@@ -342,7 +342,7 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
             expect(idea.status).to eq 'Published'
           end
 
-          it 'should set available_on to now', new: true do
+          it 'should set available_on to now' do
             idea.associated_spree_products.each do |product|
               expect(product.available_on).to be_nil
             end
@@ -351,6 +351,41 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
 
             idea.associated_spree_products.each do |product|
               expect(product.available_on).to_not be_nil
+            end
+          end
+
+          it 'assigns variant prices to idea.base_price + imprintable.base_upcharge', story_138: true do
+            publisher.generate_variants
+
+            [product_1, product_2, product_3].each do |product|
+              variants_with_offset_price =
+                product.variants
+                .where(cost_price: idea.base_price + crm_imprintable.base_upcharge)
+              
+              expect(variants_with_offset_price).to exist
+            end
+          end
+
+          context 'with 3xl size', story_138: true do
+            let!(:xxxl) { create :crm_size_xxxl, sku: '22' }
+
+            before(:each) do
+              allow(Spree::Crm::Size)
+                .to receive(:where)
+                .and_return [medium, xxxl]
+
+              allow(idea).to receive(:associated_spree_products)
+                .and_return [product_1]
+            end
+
+            it 'offsets the price of that variant by the imprintable xxxl_upcharge' do
+              publisher.generate_variants
+
+              variants_with_3xl_upcharge =
+                product_1.variants
+                .where(cost_price: idea.base_price + crm_imprintable.xxxl_upcharge)
+
+              expect(variants_with_3xl_upcharge).to exist
             end
           end
 

@@ -113,6 +113,11 @@ FactoryGirl.define do
         name "Large"
         display_value "L"
       end
+
+      factory :crm_size_xxxl do
+        name 'Triple XL'
+        display_value '3XL'
+      end
     end
   end
 
@@ -134,6 +139,8 @@ FactoryGirl.define do
 
       style_name 'whatever'
       common_name 'Test Style'
+      base_upcharge 5
+      xxxl_upcharge 10
     end
   end
 
