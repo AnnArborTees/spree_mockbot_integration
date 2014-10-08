@@ -90,11 +90,14 @@ feature 'Mockbot Ideas' do
 
         click_button 'Start'
 
-        Timeout::timeout(30) do
-          loop do
-            break if all('input[value="Complete"]').size > 0
+        expect do
+          Timeout::timeout(60) do
+            loop do
+              break if all('input[value="Complete"]').size > 0
+            end
           end
         end
+          .to_not raise_error
 
         click_button 'Complete'
 
