@@ -244,7 +244,7 @@ module Spree
           product_color = color_of_product(idea, product)
           color = option_value color_type, product_color.name
 
-          variant = Spree::Variant.new
+          variant = Spree::Variant.new(track_inventory: false)
 
           begin
             variant.sku = SpreeMockbotIntegration::Sku.build(
