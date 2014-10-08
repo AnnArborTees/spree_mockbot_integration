@@ -83,22 +83,22 @@ class EndpointActions
         # The idea at this point would be to find the imprintable variants that corrospond to
         # the given imprintable + color.
         {
-          body: if query['imprintable'] == "Gildan 5000"
+          body: if query['imprintable'] == "Unisex"
             if query['color'] == 'Blue'
               [
-                { id: 3, name: 'Large', sku: '03' },
-                { id: 4, name: 'Extra Large', sku: '04' }
+                { id: 3, name: 'Large', sku: '03', display_value: 'L' },
+                { id: 4, name: 'Extra Large', sku: '04', display_value: 'XL' }
               ]
             else
               [
-                { id: 1, name: 'Small', sku: '77' },
-                { id: 2, name: 'Medium', sku: '44' }
+                { id: 1, name: 'Small', sku: '77', display_value: 'S' },
+                { id: 2, name: 'Medium', sku: '44', display_value: 'M' }
               ]
             end
           else
             [
-              { id: 2, name: 'Medium', sku: '44' },
-              { id: 3, name: 'Large', sku: '03' }
+              { id: 2, name: 'Medium', sku: '44', display_value: 'M' },
+              { id: 3, name: 'Large', sku: '03', display_value: 'L' }
             ]
           end
         }

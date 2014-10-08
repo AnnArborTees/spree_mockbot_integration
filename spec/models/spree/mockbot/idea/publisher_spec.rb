@@ -184,11 +184,11 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
         let!(:green) { create :crm_color, name: 'Green' }
         let!(:blue)  { create :crm_color, name: 'Blue' }
         let!(:crm_imprintable) do
-          create :crm_imprintable, common_name: 'Gildan 5000', sku: '5555'
+          create :crm_imprintable, common_name: 'Unisex', sku: '5555'
         end
         let!(:other_crm_imprintable) do
           create :crm_imprintable, 
-                 common_name: 'American Apparel Standard or whatever',
+                 common_name: 'T-Shirt',
                  sku: '6666'
         end
 
@@ -208,8 +208,8 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
                         available_on: nil
         end
 
-        # let!(:small) { create :crm_size_small, sku: '77' }
-        # let!(:medium) { create :crm_size_medium, sku: '44' }
+        let!(:small) { create :crm_size_small, sku: '77' }
+        let!(:medium) { create :crm_size_medium, sku: '44' }
 
         context 'when the idea has products' do
           before :each do
@@ -242,6 +242,16 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
             end
           end
 
+          it 'sets track_inventory to false on generated variants', story_141: true do
+            expect(Spree::Variant.count).to be_zero
+
+            publisher.generate_variants
+
+            expect(Spree::Variant.count).to_not be_zero
+
+            expect(Spree::Variant.where(track_inventory: true)).to_not exist
+          end
+
           it 'should add "generate_variants" to completed_steps', compl: true do
             expect(publisher.completed_steps.map(&:name))
               .to_not include 'generate_variants'
@@ -266,22 +276,22 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
             end
 
             size_type.first.option_values.map(&:name).tap do |sizes|
-              expect(sizes).to include "medium"
-              expect(sizes).to include "large"
-              expect(sizes).to_not include "red"
-              expect(sizes).to_not include "green"
-              expect(sizes).to_not include "blue"
+              expect(sizes).to include "Medium"
+              expect(sizes).to include "Large"
+              expect(sizes).to_not include "Red"
+              expect(sizes).to_not include "Green"
+              expect(sizes).to_not include "Blue"
             end
 
             color_type.first.option_values.map(&:name).tap do |colors|
-              expect(colors).to include "red"
-              expect(colors).to include "green"
-              expect(colors).to include "blue"
+              expect(colors).to include "Red"
+              expect(colors).to include "Green"
+              expect(colors).to include "Blue"
             end
 
             style_type.first.option_values.map(&:name).tap do |styles|
-              expect(styles).to include "gildan 5000"
-              expect(styles).to include "american apparel standard or whatever"
+              expect(styles).to include "Unisex"
+              expect(styles).to include "T-Shirt"
             end
           end
 
@@ -290,7 +300,7 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
             idea.imprintables.pop
 
             expect(idea.colors.map(&:name)).to eq ['Red']
-            expect(idea.imprintables.first.name).to eq 'Gildan 5000'
+            expect(idea.imprintables.first.common_name).to eq 'Unisex'
 
             idea.colors.first.sku = '111'
 
@@ -301,13 +311,13 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
             publisher.generate_variants
             expect(product.variants.size).to eq 2
 
-            expect(product.variants.has_option('apparel-size', 'medium').size).to eq 1
-            product.variants.has_option('apparel-size', 'medium').first.tap do |medium|
+            expect(product.variants.has_option('apparel-size', 'Medium').size).to eq 1
+            product.variants.has_option('apparel-size', 'Medium').first.tap do |medium|
               expect(medium.sku).to eq "0-#{idea.sku}-2555544111"
             end
-            expect(product.variants.has_option('apparel-size', 'large').size).to eq 1
-            product.variants.has_option('apparel-size', 'large').first.tap do |large|
-              expect(large.sku).to eq "0-#{idea.sku}-2555503111"
+            expect(product.variants.has_option('apparel-size', 'Small').size).to eq 1
+            product.variants.has_option('apparel-size', 'Small').first.tap do |small|
+              expect(small.sku).to eq "0-#{idea.sku}-2555577111"
             end
           end
 

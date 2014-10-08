@@ -13,6 +13,7 @@ gem 'spree_annarbortees_theme', github: 'annarbortees/spree_annarbortees_theme',
 group :development, :test do
   gem 'webmock'
   gem 'endpoint_stub', github: 'Resonious/endpoint_stub', branch: 'develop'
+  gem 'byebug'
 end
 
 gemspec

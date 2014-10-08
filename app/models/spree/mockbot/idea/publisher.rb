@@ -147,6 +147,10 @@ module Spree
                 # HACK ActiveResource won't throw an error on 404,
                 # so I have to begin/rescue over these operations in
                 # order to deal with it.
+                # 
+                # Wow, turns out ActiveResource isn't actually trying to
+                # throw 404 every time the NoMethodError is caught. This
+                # should really get looked at thoroughly at some point.
                 begin
                   unless sizes.any?
                     raise_and_log(
@@ -165,7 +169,7 @@ module Spree
                   raise_and_log(
                     product,
                     "Either the imprintable with common name "\
-                    "'#{imprintable.name}', or the color "\
+                    "'#{imprintable.common_name}', or the color "\
                     "'#{product_color.name}' could not be found in CRM."
                   )
                 end
