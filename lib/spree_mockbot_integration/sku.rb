@@ -20,15 +20,27 @@ module SpreeMockbotIntegration
         size  = find_record(Spree::Crm::Size, :name, size_name)
         color = find_record(Spree::Crm::Color, :name, color_name)
 
-        raise SkuError, "imprintable is nil" if imprintable.nil?
-        raise SkuError, "size is nil"        if size.nil?
-        raise SkuError, "color is nil"       if color.nil?
+        validate_v0(imprintable, :imprintable, length: 4)
+        validate_v0(size,  :size,  length: 2)
+        validate_v0(color, :color, length: 3)
 
         "#{product_code}-"\
         "#{print_method}#{imprintable.sku}#{size.sku}#{color.sku}"
       end
 
       private
+
+      def validate_v0(record, record_name, options)
+        expected_length = options[:length]
+        raise "Need expected length for validate_v0" if expected_length.nil?
+
+        raise SkuError, "Couldn't find #{record_name} in CRM." if record.nil?
+        if record.sku.size != expected_length
+          raise SkuError,
+                "Expected #{expected_length} digits for #{record_name} sku: "\
+                "(#{record.sku})."
+        end
+      end
 
       def assure_product_code(idea)
         case idea
@@ -37,8 +49,8 @@ module SpreeMockbotIntegration
         when Spree::Mockbot::Idea
           idea.sku
         else
-          raise SkuError, "Expected String or Spree::Mockbot::Idea. "\
-                          "Got #{idea.class.name}."
+          raise SkuError, "Expected String or Spree::Mockbot::Idea "\
+                          "for product code. Got #{idea.class.name}"
         end
       end
 
