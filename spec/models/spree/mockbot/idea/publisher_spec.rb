@@ -252,6 +252,13 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
             expect(Spree::Variant.where(track_inventory: true)).to_not exist
           end
 
+          it 'does not call destroy_all before generating', story_149: true do
+            expect_any_instance_of(product_1.variants.class)
+              .to_not receive(:destroy_all)
+
+            publisher.generate_variants
+          end
+
           it 'should add "generate_variants" to completed_steps', compl: true do
             expect(publisher.completed_steps.map(&:name))
               .to_not include 'generate_variants'
