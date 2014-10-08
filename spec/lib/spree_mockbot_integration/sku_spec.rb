@@ -11,20 +11,29 @@ describe SpreeMockbotIntegration::Sku, sku_spec: true do
       end
 
       context 'with valid imprintable, size, and color in crm' do
-        let!(:idea) { create :mockbot_idea, sku: 'test_idea', base: true }
-        let!(:size) { create :crm_size,
+        let!(:stub_method) { :build_stubbed }
+
+        let(:idea) { send stub_method, :mockbot_idea, sku: 'test_idea', base: true }
+        let(:size) { send stub_method, :crm_size,
           sku: '11',
           name: 'Small' }
-        let!(:color) { create :crm_color,
+        let(:color) { send stub_method, :crm_color,
           sku: '333',
           name: 'Red' }
-        let!(:imprintable) { create :crm_imprintable,
+        let(:imprintable) { send stub_method, :crm_imprintable,
           sku: '7777',
           common_name: 'Test Style' }
 
-        it 'should return the appropriate value when passed names' do
-          sku = build.('test_idea', 'Test Style', 'Small', 'Red')
-          expect(sku).to eq '0-test_idea-2777711333'
+        context 'and in the database' do
+          let!(:stub_method) { :create }
+          before(:each) do
+            idea; size; color; imprintable
+          end
+
+          it 'should return the appropriate value when passed names' do
+            sku = build.('test_idea', 'Test Style', 'Small', 'Red')
+            expect(sku).to eq '0-test_idea-2777711333'
+          end
         end
 
         it 'should return the appropriate value when passed records' do
@@ -49,6 +58,15 @@ describe SpreeMockbotIntegration::Sku, sku_spec: true do
 
         context 'with invalid color' do
           subject { proc { build.(idea, imprintable, size, nil) } }
+          it { is_expected.to raise_error sku_error }
+        end
+
+        context 'when a component has a wrong number of digits', story_144: true do
+          before(:each) do
+            imprintable.sku = '1'
+          end
+          subject { proc { build.(idea, imprintable, size, color) } }
+
           it { is_expected.to raise_error sku_error }
         end
       end
