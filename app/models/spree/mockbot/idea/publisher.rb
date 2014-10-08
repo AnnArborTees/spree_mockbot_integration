@@ -133,7 +133,7 @@ module Spree
             idea.associated_spree_products.each do |product|
               product_color = color_of_product(idea, product)
 
-              product.variants.destroy_all
+              # product.variants.destroy_all
               product.master.sku = idea.sku
 
               each_option_type(&add_to_set(product.option_types))
@@ -147,10 +147,6 @@ module Spree
                 # HACK ActiveResource won't throw an error on 404,
                 # so I have to begin/rescue over these operations in
                 # order to deal with it.
-                # 
-                # Wow, turns out ActiveResource isn't actually trying to
-                # throw 404 every time the NoMethodError is caught. This
-                # should really get looked at thoroughly at some point.
                 begin
                   unless sizes.any?
                     raise_and_log(
@@ -242,25 +238,33 @@ module Spree
 
         def add_variant(idea, product, imprintable, size)
           product_color = color_of_product(idea, product)
-          color = option_value color_type, product_color.name
+          color = option_value(color_type, product_color.name)
 
-          variant = Spree::Variant.new(track_inventory: false)
+          variant = (product.variants
+              .has_option('apparel-style', imprintable.common_name)
+              .has_option('apparel-color', color.name)
+              .has_option('apparel-size', size.name)
+              .first
+            ) ||
+              Spree::Variant.new(track_inventory: false)
 
           begin
             variant.sku = SpreeMockbotIntegration::Sku.build(
                 0, idea, imprintable.common_name, size, product_color.name
               )
-          rescue RuntimeError => e
+          rescue *[RuntimeError, StandardError] => e
             raise PublishError.new(imprintable), e.message
           end
 
-          product.variants << variant
+          if variant.new_record?
+            product.variants << variant
 
-          variant.option_values << option_value(size_type, size.name, size.display_value)
-          variant.option_values << option_value(color_type, color.name)
-          variant.option_values << option_value(style_type, imprintable.common_name)
+            variant.option_values << option_value(size_type, size.name, size.display_value)
+            variant.option_values << option_value(color_type, color.name)
+            variant.option_values << option_value(style_type, imprintable.common_name)
+          end
 
-          raise_if(product, !variant.valid? || !product.valid?, true) do
+          raise_if(product, !variant.save || !product.valid?, true) do
             "Couldn't add variant to #{product.name} (#{variant.sku}). "\
             "Product errors include: #{product.errors.full_messages}. "\
             "Variant errors include: #{variant.errors.full_messages}"

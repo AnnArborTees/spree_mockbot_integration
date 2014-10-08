@@ -358,10 +358,13 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
             let!(:dummy_variant) { build_stubbed :variant }
 
             before :each do
-              allow(dummy_variant).to receive(:valid?).and_return false
+              allow(dummy_variant).to receive(:save).and_return false
               allow(dummy_variant).to receive(:option_values).and_return []
               allow(product_1).to receive_message_chain(:variants, :<<)
               allow(product_1).to receive_message_chain(:variants, :destroy_all)
+              allow(product_1).to receive_message_chain(
+                :variants, :has_option, :has_option, :has_option, :first
+              ).and_return nil
 
               allow(Spree::Variant).to receive(:new).and_return dummy_variant
             end
