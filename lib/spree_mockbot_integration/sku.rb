@@ -19,7 +19,7 @@ module SpreeMockbotIntegration
         )
         size  = find_record(Spree::Crm::Size, :name, size_name)
         color = find_record(Spree::Crm::Color, :name, color_name)
-
+        
         validate_v0(imprintable, :imprintable, length: 4)
         validate_v0(size,  :size,  length: 2)
         validate_v0(color, :color, length: 3)
@@ -43,11 +43,17 @@ module SpreeMockbotIntegration
       end
 
       def assure_product_code(idea)
+        bad_sku = -> { raise SkuError, "Idea has empty sku." }
+
         case idea
         when String
+          bad_sku.call if idea.empty?
           idea
         when Spree::Mockbot::Idea
+          bad_sku.call if idea.try(:sku).nil? || idea.sku.empty?
           idea.sku
+        when NilClass
+          raise SkuError, "Couldn't find idea in MockBot."
         else
           raise SkuError, "Expected String or Spree::Mockbot::Idea "\
                           "for product code. Got #{idea.class.name}"

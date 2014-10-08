@@ -42,32 +42,51 @@ describe SpreeMockbotIntegration::Sku, sku_spec: true do
         end
 
         context 'with invalid idea' do
+          let!(:message) do
+            /Couldn\'t find idea in MockBot/
+          end
+
           subject { proc { build.(nil, imprintable, size, color) } }
-          it { is_expected.to raise_error sku_error }
+          it { is_expected.to raise_error sku_error, message }
         end
 
         context 'with invalid imprintable' do
+          let!(:message) do
+            /Couldn\'t find imprintable in CRM/
+          end
+
           subject { proc { build.(idea, nil, size, color) } }
-          it { is_expected.to raise_error sku_error }
+          it { is_expected.to raise_error sku_error, message }
         end
 
         context 'with invalid size' do
+          let!(:message) do
+            /Couldn\'t find size in CRM/
+          end
+
           subject { proc { build.(idea, imprintable, nil, color) } }
-          it { is_expected.to raise_error sku_error }
+          it { is_expected.to raise_error sku_error, message }
         end
 
         context 'with invalid color' do
+          let!(:message) do
+            /Couldn\'t find color in CRM/
+          end
+
           subject { proc { build.(idea, imprintable, size, nil) } }
-          it { is_expected.to raise_error sku_error }
+          it { is_expected.to raise_error sku_error, message }
         end
 
         context 'when a component has a wrong number of digits', story_144: true do
           before(:each) do
             imprintable.sku = '1'
           end
+          let!(:message) do
+            /Expected 4 digits for imprintable/
+          end
           subject { proc { build.(idea, imprintable, size, color) } }
 
-          it { is_expected.to raise_error sku_error }
+          it { is_expected.to raise_error sku_error, message }
         end
       end
     end
