@@ -21,6 +21,9 @@ module Spree
           rescue ActiveResource::UnauthorizedAccess
             @unauthorized_access = true
             @ideas = []
+          rescue StandardError => e
+            @other_error = e
+            @ideas = []
           end
         end
 

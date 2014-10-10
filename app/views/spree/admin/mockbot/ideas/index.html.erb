@@ -25,6 +25,12 @@
       <%= link_to 'settings', spree.admin_api_settings_url %>.
     </div>
   </div>
+<% elsif @other_error %>
+  <div class="row">
+    <div class="alpha twelve columns error-text">
+      Something went wrong: <%= @other_error.message %>
+    </div>
+  </div>
 <% elsif @ideas.any? %>
   <%= paginate @ideas %>
 
