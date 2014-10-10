@@ -252,6 +252,8 @@ module Spree
             variant.sku = SpreeMockbotIntegration::Sku.build(
                 0, idea, imprintable.common_name, size, product_color.name
               )
+            variant.cost_price =
+              idea.base_price + upcharge_for(size, imprintable)
           rescue *[RuntimeError, StandardError] => e
             raise PublishError.new(imprintable), e.message
           end
@@ -269,6 +271,26 @@ module Spree
             "Product errors include: #{product.errors.full_messages}. "\
             "Variant errors include: #{variant.errors.full_messages}"
           end
+        end
+
+        def upcharge_for(size, imprintable)
+          imprintable = crm_imprintable(imprintable)
+
+          upcharge_field = if /(?<count>\d)XL/ =~ size.display_value
+              "#{'x' * count.to_i}l_upcharge".to_sym
+            else
+              :base_upcharge
+            end
+
+          imprintable.try(upcharge_field).tap do |upcharge|
+            raise "Imprintable has no #{upcharge_field}" if upcharge.nil?
+          end
+        end
+
+        def crm_imprintable(imprintable)
+          Spree::Crm::Imprintable
+            .where(common_name: imprintable.common_name)
+            .first
         end
 
         def color_of_product(idea, product)

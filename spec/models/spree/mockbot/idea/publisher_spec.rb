@@ -360,8 +360,11 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
             [product_1, product_2, product_3].each do |product|
               variants_with_offset_price =
                 product.variants
-                .where(cost_price: idea.base_price + crm_imprintable.base_upcharge)
-              
+                .where(
+                  cost_price: idea.base_price + crm_imprintable.base_upcharge -
+                    0.000000000000002
+                )
+
               expect(variants_with_offset_price).to exist
             end
           end
@@ -383,8 +386,10 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
 
               variants_with_3xl_upcharge =
                 product_1.variants
-                .where(cost_price: idea.base_price + crm_imprintable.xxxl_upcharge)
-
+                .where(
+                  cost_price: idea.base_price + crm_imprintable.xxxl_upcharge -
+                    0.000000000000002
+                )
               expect(variants_with_3xl_upcharge).to exist
             end
           end
