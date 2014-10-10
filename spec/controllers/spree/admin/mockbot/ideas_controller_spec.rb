@@ -46,6 +46,18 @@ describe Spree::Admin::Mockbot::IdeasController, mockbot_spec: true do
       end
     end
 
+    context 'when something else goes wrong', story_186: true do
+      before :each do
+        allow(Spree::Mockbot::Idea)
+          .to receive(:all).and_raise StandardError, "Here is stupid error"
+      end
+
+      it 'should catch the error and assign @other_error to the error' do
+        expect{get :index}.to_not raise_error
+        expect(assigns(:other_error)).to be_a StandardError
+      end
+    end
+
     it '@connection_refused should be nil' do
       get :index
       expect(assigns(:connection_refused)).to be_nil

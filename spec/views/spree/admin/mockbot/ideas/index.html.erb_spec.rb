@@ -39,6 +39,18 @@ describe '/spree/admin/mockbot/ideas/index.html.erb', mockbot_spec: true do
     end
   end
 
+  context 'when @other_error is true', story_186: true do
+    before :each do
+      assign(:other_error, StandardError.new('Stupid error...'))
+    end
+
+    it 'should inform the user' do
+      render
+      expect(rendered).to have_content 'Something went wrong: '
+      expect(rendered).to have_content 'Stupid error...'
+    end
+  end
+
   context 'when there is a published idea' do
     let!(:idea) { create :published_mockbot_idea }
 
