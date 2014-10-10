@@ -84,7 +84,9 @@ describe Spree::Mockbot::Idea, idea_spec: true do
   end
 
   describe '#copy_to_product', publish: true do
-    let!(:idea) { create :mockbot_idea }
+    let!(:idea) do
+      create :mockbot_idea, working_name: 'Interesting', product_type: 'tee'
+    end
     let(:red_product) { idea.copy_to_product Spree::Product.new, 'Red' }
 
     it 'should assign the name to the idea name and type' do
@@ -95,8 +97,8 @@ describe Spree::Mockbot::Idea, idea_spec: true do
       expect(red_product.description).to eq idea.description
     end
 
-    it 'should assign the slug (permalink) to the idea sku + given color' do
-      expect(red_product.slug).to eq "#{idea.sku}-red"
+    it 'should assign the slug to the idea name + type + given color', story_145: true do
+      expect(red_product.slug).to eq "interesting-tee-red"
     end
 
     context 'shipping category' do
