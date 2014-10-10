@@ -32,7 +32,7 @@ module Spree
       end
 
       def product_slug(color)
-        "#{sku}-#{color_str(color).underscore}"
+        slugify "#{product_name(color)}-#{color_str(color)}"
       end
 
       def copy_to_product(product, color)
@@ -111,6 +111,10 @@ module Spree
       end
 
       private
+
+      def slugify(str)
+        str.downcase.gsub(/[^[a-z0-9-]]/, '-')
+      end
 
       def color_str(color)
         color.is_a?(String) ? color : color.name
