@@ -133,7 +133,6 @@ module Spree
             idea.associated_spree_products.each do |product|
               product_color = color_of_product(idea, product)
 
-              # product.variants.destroy_all
               product.master.sku = idea.sku
 
               each_option_type(&add_to_set(product.option_types))
