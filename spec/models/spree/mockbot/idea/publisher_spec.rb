@@ -41,12 +41,15 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
   end
 
   context 'with an idea' do
-    let!(:idea) { create :mockbot_idea_with_images }
+    let!(:store_1) { create :default_store }
+    let!(:store_2) { create :alternative_store }
+    let!(:idea) { create :mockbot_idea_with_images, store_ids: "#{store_1.id},#{store_2.id}" }
 
     describe 'Step methods' do
       let!(:size_small)  { create :crm_size_small, sku: 01 }
       let!(:size_medium) { create :crm_size_medium, sku: 02 }
       let!(:size_large)  { create :crm_size_large, sku: 03 }
+
       let(:publisher) do
         create(:mockbot_idea_publisher, idea_sku: idea.sku).tap do |p|
           allow(p).to receive(:idea).and_return idea
@@ -107,6 +110,16 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
           publisher.generate_products
           expect(publisher.completed_steps.map(&:name))
             .to include 'generate_products'
+        end
+
+        it 'grabs stores from idea store_ids and adds them to the products', story_208: true do
+          publisher.generate_products
+          expect(idea.associated_spree_products.count).to eq 3
+
+          idea.associated_spree_products.each do |product|
+            expect(product.stores).to include store_1
+            expect(product.stores).to include store_2
+          end
         end
 
         context "when there's already a product matching the idea's sku/slug" do

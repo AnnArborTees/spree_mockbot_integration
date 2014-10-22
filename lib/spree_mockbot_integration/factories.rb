@@ -27,6 +27,8 @@ FactoryGirl.define do
       colors []
       imprintables []
 
+      store_ids '1,3,4'
+
       product_type 'T-Shirt'
       meta_keywords 'test one two three'
       meta_description 'whateverrrrrrrrrrrrrrr'
