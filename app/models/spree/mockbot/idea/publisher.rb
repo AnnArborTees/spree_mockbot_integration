@@ -84,6 +84,7 @@ module Spree
               protect_against_sql_error(product) do
                 idea.copy_to_product(product, color)
                 idea.assign_sku_to product
+                product.store_ids = idea.store_ids.split(',')
                 product.save
               end
 

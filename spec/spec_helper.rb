@@ -31,6 +31,8 @@ require 'spree/testing_support/factories'
 require 'spree/testing_support/controller_requests'
 require 'spree/testing_support/authorization_helpers'
 require 'spree/testing_support/url_helpers'
+# Multi domain factories for stores
+require 'spree_multi_domain/factories'
 
 # Requires factories defined in lib/spree_mockbot_integration/factories.rb
 require 'spree_mockbot_integration/factories'
