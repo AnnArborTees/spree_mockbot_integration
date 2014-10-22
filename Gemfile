@@ -9,6 +9,7 @@ gem 'spree_core', github: 'spree/spree', branch: branch
 gem 'spree_frontend', github: 'spree/spree', branch: branch
 gem 'spree_auth_devise', github: 'spree/spree_auth_devise', branch: branch
 gem 'spree_annarbortees_theme', github: 'annarbortees/spree_annarbortees_theme', branch: branch
+gem 'spree_multi_domain', github: 'annarbortees/spree-multi-domain', branch: branch
 
 group :development, :test do
   gem 'webmock'
