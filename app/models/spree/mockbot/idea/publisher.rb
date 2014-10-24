@@ -294,7 +294,7 @@ module Spree
         def upcharge_for(size, imprintable)
           imprintable = crm_imprintable(imprintable)
 
-          upcharge_field = if /(?<count>\d)XL/ =~ size.display_value
+          upcharge_field = if /(?<count>\d)XL/ =~ size.display_value.upcase
               "#{'x' * count.to_i}l_upcharge".to_sym
             else
               :base_upcharge
