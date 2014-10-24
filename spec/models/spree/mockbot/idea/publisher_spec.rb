@@ -373,10 +373,11 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
             [product_1, product_2, product_3].each do |product|
               variants_with_offset_price =
                 product.variants
-                .where(
-                  cost_price: idea.base_price + crm_imprintable.base_upcharge -
-                    0.000000000000002
-                )
+                  .joins(:prices)
+                  .where(
+                    spree_prices: { amount: idea.base_price +
+                      crm_imprintable.base_upcharge - 0.000000000000002 }
+                  )
 
               expect(variants_with_offset_price).to exist
             end
@@ -387,6 +388,15 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
 
             [product_1, product_2, product_3].each do |product|
               expect(product.variants.where(weight: 20)).to exist
+            end
+          end
+
+          context 'when spree images have an option_value_id' do
+            it 'assigns the option_value_id to that of the apparel-style with matching common_name', story_211: true do
+              expect_any_instance_of(Spree::Attachment)
+                .to receive(:option_value_id=)
+
+              publisher.generate_variants
             end
           end
 
@@ -416,10 +426,11 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
 
               variants_with_3xl_upcharge =
                 product_1.variants
-                .where(
-                  cost_price: idea.base_price + crm_imprintable.xxxl_upcharge -
-                    0.000000000000002
-                )
+                  .joins(:prices)
+                  .where(
+                    spree_prices: { amount: idea.base_price +
+                      crm_imprintable.xxxl_upcharge - 0.000000000000002 }
+                  )
               expect(variants_with_3xl_upcharge).to exist
             end
           end
@@ -433,7 +444,7 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
               allow(product_1).to receive_message_chain(:variants, :<<)
               allow(product_1).to receive_message_chain(:variants, :destroy_all)
               allow(product_1).to receive_message_chain(
-                :variants, :has_option, :has_option, :has_option, :first
+                :variants, :where
               ).and_return nil
 
               allow(Spree::Variant).to receive(:new).and_return dummy_variant
