@@ -167,6 +167,26 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
             .to include 'import_images'
         end
 
+        context 'when images have option_value_id', story_211: true do
+          before(:each) do
+            allow_any_instance_of(Spree::Asset)
+              .to receive(:option_value_id=)
+          end
+
+          it 'assigns the option_value_id to the option value with matching apparel-style imprintable common name' do
+            publisher.generate_products
+            product = idea.associated_spree_products.first
+            allow(idea).to receive(:associated_spree_products)
+              .and_return [product]
+
+            expect(product)
+              .to receive_message_chain(:variants, :with_option)
+              .with('apparel-style', 'Unisex')
+
+            publisher.import_images
+          end
+        end
+
         context 'when images fail to import', error_test: true do
           before :each do
             allow(idea).to receive(:associated_spree_products)
@@ -380,15 +400,6 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
 
             [product_1, product_2, product_3].each do |product|
               expect(product.variants.where(weight: 20)).to exist
-            end
-          end
-
-          context 'when spree images have an option_value_id' do
-            it 'assigns the option_value_id to that of the apparel-style with matching common_name', story_211: true do
-              expect_any_instance_of(Spree::Attachment)
-                .to receive(:option_value_id=)
-
-              publisher.generate_variants
             end
           end
 
