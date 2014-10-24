@@ -46,9 +46,9 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
     let!(:idea) { create :mockbot_idea_with_images, store_ids: "#{store_1.id},#{store_2.id}" }
 
     describe 'Step methods' do
-      let!(:size_small)  { create :crm_size_small, sku: 01 }
-      let!(:size_medium) { create :crm_size_medium, sku: 02 }
-      let!(:size_large)  { create :crm_size_large, sku: 03 }
+      # let!(:size_small)  { create :crm_size_small, sku: 01 }
+      # let!(:size_medium) { create :crm_size_medium, sku: 02 }
+      # let!(:size_large)  { create :crm_size_large, sku: 03 }
 
       let(:publisher) do
         create(:mockbot_idea_publisher, idea_sku: idea.sku).tap do |p|
@@ -229,14 +229,14 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
             allow(idea).to receive(:associated_spree_products)
               .and_return [product_1, product_2, product_3]
 
-            allow(publisher).to receive(:color_of_product) { |_idea, product|
+            allow(publisher).to receive(:color_of_product) do |_idea, product|
               case product
               when product_1 then red
               when product_2 then green
               when product_3 then blue
               else raise "darn!"
               end
-            }
+            end
 
             [product_1, product_2, product_3].each do |product|
               allow(product).to receive(:save).and_return true
@@ -379,6 +379,14 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
                 )
 
               expect(variants_with_offset_price).to exist
+            end
+          end
+
+          it 'assigns variant weight from crm variant weight', story_209: true do
+            publisher.generate_variants
+
+            [product_1, product_2, product_3].each do |product|
+              product.variants.where(weight: 20).to exist
             end
           end
 

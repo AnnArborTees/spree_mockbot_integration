@@ -7,6 +7,7 @@ FactoryGirl.define do
     Color = Struct.new(:name, :sku)
     Mockup = Struct.new(:file_url, :description, :color)
     Imprintable = Struct.new(:name, :common_name, :sku)
+    Size = Struct.new(:display_value, :sku)
 
     factory :mockbot_idea, class: Spree::Mockbot::Idea do
       sequence(:sku) { |n| "idea_#{n}" }
@@ -120,6 +121,14 @@ FactoryGirl.define do
         name 'Triple XL'
         display_value '3XL'
       end
+    end
+  end
+
+  FactoryGirl.define do
+    factory :crm_imprintable_variant, class: Spree::Crm::ImprintableVariant do
+      sequence(:color) { |n| Color.new("Color #{n}", '0' * (3 - n.to_s.size) + n.to_s) }
+      sequence(:size) { |n| Size.new("S#{n}", '0' * (2 - n.to_s.size) + n.to_s) }
+      weight 15.00
     end
   end
 
