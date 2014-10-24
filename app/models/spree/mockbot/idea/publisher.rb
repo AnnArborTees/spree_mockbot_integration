@@ -13,6 +13,7 @@ module Spree
 
       class Publisher < ActiveRecord::Base
         include SpreeMockbotIntegration::QuickCurry
+        include Spree::OptionValueUtils
 
         self.table_name = 'spree_mockbot_publishers'
 
@@ -378,19 +379,6 @@ module Spree
           else
             assure Spree::OptionType, name: type, presentation: presentation
           end
-        end
-
-        def option_value(type, value, presentation = nil)
-          presentation = value unless !presentation.nil?
-          assure(Spree::OptionValue,
-            option_type_id: option_type(type).id,
-            name:           value,
-            presentation:   presentation
-          )
-        end
-
-        def assure(clazz, conditions)
-          clazz.where(conditions).first || clazz.create(conditions) # TODO is this not actually creating????
         end
       end
     end
