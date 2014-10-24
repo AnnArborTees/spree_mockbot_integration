@@ -1,6 +1,9 @@
 <% if @error %>
   $('.steps-container').append(<%= @error %>);
 <% else %>
+  $('#start-publish').replaceWith(
+    "<%=j render partial: 'start_button', locals: { publisher: spree.admin_mockbot_publisher_path(@publisher) } %>"
+  );
   $('#start-publish').hide();
   $('#publish-buttons').prepend(
     "<%=j render partial: 'cancel_button', locals: { publisher: @publisher } %>"
