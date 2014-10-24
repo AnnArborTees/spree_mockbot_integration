@@ -70,7 +70,7 @@ module Spree
           image.attachment = open mockup_url mockup
           image.position   = is_thumbnail ? 0 : product.images.count
           image.alt        = mockup.description
-          if image.respond_to?(:option_value_id=)
+          if image.respond_to?(:option_value_id=) && !is_thumbnail
             image.option_value_id = mockup_option_value_id(mockup, product)
           end
 
@@ -120,7 +120,7 @@ module Spree
         Spree::OptionValue
           .where(option_type_id: style_type.id)
           .joins(:variants)
-          .where(spree_option_values_variants: { id: product.variants.map(&:id) })
+          .where(spree_option_values_variants: { variant_id: product.variants.map(&:id) })
           .where('lower(name) = ?', mockup.imprintable.common_name.downcase)
           .first
           .try(:id)
