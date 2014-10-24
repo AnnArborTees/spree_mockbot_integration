@@ -85,6 +85,7 @@ RSpec.configure do |config|
 
     EndpointActions.mock_for_ideas(config, email: 'test@test.com', token: 'AbC123')
     crm_args = [config, email: 'test@testcrm.com', token: 'zYx987']
+    EndpointActions.mock_for_imprintable_variants(*crm_args)
     EndpointActions.mock_for_sizes(*crm_args)
     EndpointActions.mock_for_colors(*crm_args)
     EndpointActions.mock_for_imprintables(*crm_args)

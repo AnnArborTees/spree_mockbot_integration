@@ -93,14 +93,13 @@ class EndpointActions
     end
 
     def size_index(request, params, stub, &supr)
-      raise "TODO remove size_index? If you really need it then remove this raise."
-
       query = request.uri.query_values
       if query['color'] && query['imprintable']
         # The idea at this point would be to find the imprintable variants that corrospond to
         # the given imprintable + color.
         {
           body: if query['imprintable'] == "Unisex"
+            raise "Color + imprintable queries should be done on ImprintableVariants instead of sizes."
             if query['color'] == 'Blue'
               [
                 { id: 3, name: 'Large', sku: '03', display_value: 'L' },

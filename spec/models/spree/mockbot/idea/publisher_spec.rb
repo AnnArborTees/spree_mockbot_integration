@@ -386,7 +386,7 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
             publisher.generate_variants
 
             [product_1, product_2, product_3].each do |product|
-              product.variants.where(weight: 20).to exist
+              expect(product.variants.where(weight: 20)).to exist
             end
           end
 
@@ -394,9 +394,18 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
             let!(:xxxl) { create :crm_size_xxxl, sku: '22' }
 
             before(:each) do
-              allow(Spree::Crm::Size)
+              dummy_medium_variant = double(
+                'ImprintableVariant',
+                size: medium, weight: 10
+              )
+              dummy_xxxl_variant = double(
+                'ImprintableVariant',
+                size: xxxl, weight: 15
+              )
+
+              allow(Spree::Crm::ImprintableVariant)
                 .to receive(:where)
-                .and_return [medium, xxxl]
+                .and_return [dummy_medium_variant, dummy_xxxl_variant]
 
               allow(idea).to receive(:associated_spree_products)
                 .and_return [product_1]

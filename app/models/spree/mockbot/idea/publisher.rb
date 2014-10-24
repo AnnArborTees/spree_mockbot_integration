@@ -139,7 +139,7 @@ module Spree
               each_option_type(&add_to_set(product.option_types))
 
               idea.imprintables.each do |imprintable|
-                sizes = Spree::Crm::Size.where(
+                imprintable_variants = Spree::Crm::ImprintableVariant.where(
                     imprintable: imprintable.common_name,
                           color: product_color.name
                   )
@@ -148,18 +148,19 @@ module Spree
                 # so I have to begin/rescue over these operations in
                 # order to deal with it.
                 begin
-                  unless sizes.any?
+                  unless imprintable_variants.any?
                     raise_and_log(
                       product,
-                      "No sizes matched the imprintable with common name '"\
-                      "#{imprintable.common_name}' "\
+                      "No crm variants matched the imprintable with common "\
+                      "name #{imprintable.common_name}' "\
                       "and the color '#{product_color.name}' in CRM. "\
                       "Check the imprintable variants for "\
                       "'#{imprintable.common_name}'."
                     )
                   end
 
-                  sizes.each(&curry(:add_variant).(idea, product, imprintable))
+                  imprintable_variants
+                    .each(&curry(:add_variant).(idea, product, imprintable))
 
                 rescue NoMethodError
                   raise_and_log(
@@ -236,13 +237,15 @@ module Spree
           end
         end
 
-        def add_variant(idea, product, imprintable, size)
+        def add_variant(idea, product, imprintable, imprintable_variant)
           product_color = color_of_product(idea, product)
-          color = option_value(color_type, product_color.name)
+          color_value = option_value(color_type, product_color.name)
+
+          size = imprintable_variant.size
 
           variant = (product.variants
               .has_option('apparel-style', imprintable.common_name)
-              .has_option('apparel-color', color.name)
+              .has_option('apparel-color', color_value.name)
               .has_option('apparel-size', size.name)
               .first
             ) ||
@@ -250,10 +253,14 @@ module Spree
 
           begin
             variant.sku = SpreeMockbotIntegration::Sku.build(
-                0, idea, imprintable.common_name, size, product_color.name
+                0, idea,
+                imprintable.common_name,
+                size,
+                product_color.name
               )
             variant.cost_price =
               idea.base_price + upcharge_for(size, imprintable)
+            variant.weight = imprintable_variant.weight
           rescue *[RuntimeError, StandardError] => e
             raise PublishError.new(imprintable), e.message
           end
@@ -262,7 +269,7 @@ module Spree
             product.variants << variant
 
             variant.option_values << option_value(size_type, size.name, size.display_value)
-            variant.option_values << option_value(color_type, color.name)
+            variant.option_values << option_value(color_type, color_value.name)
             variant.option_values << option_value(style_type, imprintable.common_name)
           end
 
