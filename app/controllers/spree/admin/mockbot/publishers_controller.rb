@@ -66,6 +66,11 @@ module Spree
           Spree::Mockbot::Idea::Publisher
         end
 
+        def resource_not_found
+          flash[:error] = flash_message_for(model_class.new, :not_found)
+          redirect_to spree.admin_mockbot_ideas_path
+        end
+
         private
 
         def assign_idea

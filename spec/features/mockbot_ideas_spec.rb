@@ -25,6 +25,9 @@ feature 'Mockbot Ideas' do
       let!(:idea1) { create :mockbot_idea_with_images, status: 'Awaiting Signoff' }
       let!(:idea2) { create :mockbot_idea_with_images, status: 'Published' }
 
+      let!(:store_1) { create :default_store }
+      let!(:store_2) { create :alternative_store }
+
       let!(:red)   { create :crm_color, name: 'Red', sku: '111' }
       let!(:green) { create :crm_color, name: 'Green' }
       let!(:blue)  { create :crm_color, name: 'Blue' }

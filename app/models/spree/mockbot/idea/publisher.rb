@@ -84,7 +84,12 @@ module Spree
               protect_against_sql_error(product) do
                 idea.copy_to_product(product, color)
                 idea.assign_sku_to product
-                product.store_ids = idea.store_ids.split(',')
+                if product.respond_to?(:store_ids=)
+                  product.store_ids = idea.store_ids.split(',')
+                else
+                  product.log_update "Unable to assign product stores. Is "\
+                                     "the spree-multi-domain gem installed?"
+                end
                 product.save
               end
 
@@ -180,7 +185,13 @@ module Spree
                                        "availability."
               end
 
-              product.layout = 'imprinted_apparel'
+              if product.respond_to?(:layout=)
+                product.layout = 'imprinted_apparel'
+              else
+                product.log_update "Unable to assign product layout. Is "\
+                                   "the annarbortees-theme gem installed?"
+              end
+
               if product.save
                 product.log_update "Assigned product.layout 'imprinted_apparel' to  #{idea.sku}"
               else

@@ -68,5 +68,5 @@ the installer will append this file to the app vendored assets here: 'vendor/ass
 }
 
 .hidden-dots {
-  display: none;
+  display: none!important;
 }
