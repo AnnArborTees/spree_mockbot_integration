@@ -179,11 +179,14 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
             allow(idea).to receive(:associated_spree_products)
               .and_return [product]
 
-            expect(product)
-              .to receive_message_chain(:variants, :with_option)
-              .with('apparel-style', 'Unisex')
+            images = product.images
+            allow(product).to receive(:images).and_return images
 
             publisher.import_images
+
+            images.each do |image|
+              expect(image).to receive(:option_value_id)
+            end
           end
         end
 
