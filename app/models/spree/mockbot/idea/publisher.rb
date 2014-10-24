@@ -255,29 +255,26 @@ module Spree
 
           size = imprintable_variant.size
 
-          variant = (product.variants
-              .has_option('apparel-style', imprintable.common_name)
-              .has_option('apparel-color', color_value.name)
-              .has_option('apparel-size', size.name)
-              .first
-            ) ||
-              Spree::Variant.new(track_inventory: false)
+          sku = SpreeMockbotIntegration::Sku.build(
+            0, idea,
+            imprintable.common_name,
+            size,
+            product_color.name
+          ) 
+
+          variant = product.variants
+            .where(sku: sku).first || Spree::Variant.new(track_inventory: false)
 
           begin
-            variant.sku = SpreeMockbotIntegration::Sku.build(
-                0, idea,
-                imprintable.common_name,
-                size,
-                product_color.name
-              )
-            variant.cost_price =
-              idea.base_price + upcharge_for(size, imprintable)
+            variant.price =
+              idea.base_price.to_f + upcharge_for(size, imprintable).to_f
             variant.weight = imprintable_variant.weight
           rescue *[RuntimeError, StandardError] => e
             raise PublishError.new(imprintable), e.message
           end
 
           if variant.new_record?
+            variant.sku = sku
             product.variants << variant
 
             variant.option_values << option_value(size_type, size.name, size.display_value)
