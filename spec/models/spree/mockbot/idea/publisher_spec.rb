@@ -6,8 +6,8 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
     it {
       is_expected.to ensure_inclusion_of(:current_step)
                      .in_array([
-                      'generate_products', 'import_images', 
-                      'generate_variants', 'done', nil
+                      'generate_products', 'generate_variants',
+                      'import_images', 'done', nil
                     ])
     }
     it { is_expected.to_not validate_presence_of(:current_step) }
@@ -46,10 +46,6 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
     let!(:idea) { create :mockbot_idea_with_images, store_ids: "#{store_1.id},#{store_2.id}" }
 
     describe 'Step methods' do
-      # let!(:size_small)  { create :crm_size_small, sku: 01 }
-      # let!(:size_medium) { create :crm_size_medium, sku: 02 }
-      # let!(:size_large)  { create :crm_size_large, sku: 03 }
-
       let(:publisher) do
         create(:mockbot_idea_publisher, idea_sku: idea.sku).tap do |p|
           allow(p).to receive(:idea).and_return idea
@@ -87,10 +83,6 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
 
           it { is_expected.to be_falsey }
         end
-      end
-
-      describe '#perform_step!' do
-        it 'performs current_step, then increments it'
       end
 
       describe '#generate_products' do

@@ -18,7 +18,7 @@ module Spree
         self.table_name = 'spree_mockbot_publishers'
 
         def self.steps
-          %w(generate_products import_images generate_variants)
+          %w(generate_products generate_variants import_images)
         end
 
         def self.step_after(from)
