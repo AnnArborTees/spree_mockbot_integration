@@ -262,7 +262,7 @@ module Spree
           ) 
 
           variant = product.variants
-            .where(sku: sku) || Spree::Variant.new(track_inventory: false)
+            .where(sku: sku).first || Spree::Variant.new(track_inventory: false)
 
           begin
             variant.price =
