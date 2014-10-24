@@ -5,7 +5,7 @@ FactoryGirl.define do
   # require 'spree_mockbot_integration/factories'
   FactoryGirl.define do
     Color = Struct.new(:name, :sku)
-    Mockup = Struct.new(:file_url, :description, :color)
+    Mockup = Struct.new(:file_url, :description, :color, :imprintable)
     Imprintable = Struct.new(:name, :common_name, :sku)
     Size = Struct.new(:display_value, :sku)
 
@@ -41,13 +41,14 @@ FactoryGirl.define do
       sequence(:permalink) { |n| "idea_#{n}" }
 
       factory :mockbot_idea_with_colors do
+        imprintable_1 = Imprintable.new("Gildan 5000", "Unisex",  "1234")
+        imprintable_2 = Imprintable.new("American Apparel Standard or whatever", 
+                                        "T-Shirt", "9876")
+
         colors [Color.new("Red"),
                 Color.new("Blue"),
                 Color.new("Green")]
-        imprintables [Imprintable.new("Gildan 5000",                           
-                                      "Unisex",  "1234"),
-                      Imprintable.new("American Apparel Standard or whatever", 
-                                      "T-Shirt", "9876")]
+        imprintables [imprintable_1, imprintable_2]
 
         factory :publishable_mockbot_idea do
           status 'Ready to Publish'
@@ -63,34 +64,40 @@ FactoryGirl.define do
               Mockup.new(
                 "http://test-file-url.com/test_files/#{(1..10).to_a.sample}.png",
                 "Test Description For Red",
-                Color.new("Red")
+                Color.new("Red"),
+                imprintable_1
               ),
               Mockup.new(
                 "http://test-file-url.com/test_files/#{(1..10).to_a.sample}.png",
                 "Test Blue Descript",
-                Color.new("Blue")
+                Color.new("Blue"),
+                imprintable_1
               ),
               Mockup.new(
                 "http://test-file-url.com/test_files/#{(1..10).to_a.sample}.png",
                 "Test Green One Finally",
-                Color.new("Green")
+                Color.new("Green"),
+                imprintable_2
               )
             ]
           thumbnails [
               Mockup.new(
                 "http://test-file-url.com/test_thumbs/#{(1..10).to_a.sample}.png",
                 "Test Description",
-                Color.new("Red")
+                Color.new("Red"),
+                imprintable_1
               ),
               Mockup.new(
                 "http://test-file-url.com/test_thumbs/#{(1..10).to_a.sample}.png",
                 "Test Description",
-                Color.new("Blue")
+                Color.new("Blue"),
+                imprintable_2
               ),
               Mockup.new(
                 "http://test-file-url.com/test_files/#{(1..10).to_a.sample}.png",
                 "Hella Green Thumbnail",
-                Color.new("Green")
+                Color.new("Green"),
+                imprintable_2
               )
             ]
         end

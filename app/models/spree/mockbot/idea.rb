@@ -2,6 +2,7 @@ module Spree
   module Mockbot
     class Idea < ActiveResource::Base
       include RemoteModel
+      include OptionValueUtils
 
       self.settings_class = MockbotSettings
       authenticates_with_email_and_token
@@ -69,6 +70,9 @@ module Spree
           image.attachment = open mockup_url mockup
           image.position   = is_thumbnail ? 0 : product.images.count
           image.alt        = mockup.description
+          if image.respond_to?(:option_value_id=)
+            image.option_value_id = mockup_option_value_id(mockup, product)
+          end
 
           product.images << image
           image.save
@@ -111,6 +115,16 @@ module Spree
       end
 
       private
+
+      def mockup_option_value_id(mockup, product)
+        Spree::OptionValue
+          .where(option_type_id: style_type.id)
+          .joins(:variants)
+          .where(spree_option_values_variants: { id: product.variants.map(&:id) })
+          .where('lower(name) = ?', mockup.imprintable.common_name.downcase)
+          .first
+          .try(:id)
+      end
 
       def color_str(color)
         color.is_a?(String) ? color : color.name

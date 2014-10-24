@@ -6,8 +6,8 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
     it {
       is_expected.to ensure_inclusion_of(:current_step)
                      .in_array([
-                      'generate_products', 'import_images', 
-                      'generate_variants', 'done', nil
+                      'generate_products', 'generate_variants',
+                      'import_images', 'done', nil
                     ])
     }
     it { is_expected.to_not validate_presence_of(:current_step) }
@@ -46,10 +46,6 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
     let!(:idea) { create :mockbot_idea_with_images, store_ids: "#{store_1.id},#{store_2.id}" }
 
     describe 'Step methods' do
-      # let!(:size_small)  { create :crm_size_small, sku: 01 }
-      # let!(:size_medium) { create :crm_size_medium, sku: 02 }
-      # let!(:size_large)  { create :crm_size_large, sku: 03 }
-
       let(:publisher) do
         create(:mockbot_idea_publisher, idea_sku: idea.sku).tap do |p|
           allow(p).to receive(:idea).and_return idea
@@ -87,10 +83,6 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
 
           it { is_expected.to be_falsey }
         end
-      end
-
-      describe '#perform_step!' do
-        it 'performs current_step, then increments it'
       end
 
       describe '#generate_products' do
@@ -173,6 +165,29 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
           publisher.import_images
           expect(publisher.completed_steps.map(&:name))
             .to include 'import_images'
+        end
+
+        context 'when images have option_value_id', story_211: true do
+          before(:each) do
+            allow_any_instance_of(Spree::Asset)
+              .to receive(:option_value_id=)
+          end
+
+          it 'assigns the option_value_id to the option value with matching apparel-style imprintable common name' do
+            publisher.generate_products
+            product = idea.associated_spree_products.first
+            allow(idea).to receive(:associated_spree_products)
+              .and_return [product]
+
+            images = product.images
+            allow(product).to receive(:images).and_return images
+
+            publisher.import_images
+
+            images.each do |image|
+              expect(image).to receive(:option_value_id)
+            end
+          end
         end
 
         context 'when images fail to import', error_test: true do
@@ -373,10 +388,11 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
             [product_1, product_2, product_3].each do |product|
               variants_with_offset_price =
                 product.variants
-                .where(
-                  cost_price: idea.base_price + crm_imprintable.base_upcharge -
-                    0.000000000000002
-                )
+                  .joins(:prices)
+                  .where(
+                    spree_prices: { amount: idea.base_price +
+                      crm_imprintable.base_upcharge - 0.000000000000002 }
+                  )
 
               expect(variants_with_offset_price).to exist
             end
@@ -416,10 +432,11 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
 
               variants_with_3xl_upcharge =
                 product_1.variants
-                .where(
-                  cost_price: idea.base_price + crm_imprintable.xxxl_upcharge -
-                    0.000000000000002
-                )
+                  .joins(:prices)
+                  .where(
+                    spree_prices: { amount: idea.base_price +
+                      crm_imprintable.xxxl_upcharge - 0.000000000000002 }
+                  )
               expect(variants_with_3xl_upcharge).to exist
             end
           end
@@ -433,7 +450,7 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
               allow(product_1).to receive_message_chain(:variants, :<<)
               allow(product_1).to receive_message_chain(:variants, :destroy_all)
               allow(product_1).to receive_message_chain(
-                :variants, :has_option, :has_option, :has_option, :first
+                :variants, :where
               ).and_return nil
 
               allow(Spree::Variant).to receive(:new).and_return dummy_variant
