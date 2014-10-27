@@ -70,6 +70,7 @@ module Spree
           image.attachment = open mockup_url mockup
           image.position   = is_thumbnail ? 0 : product.images.count
           image.alt        = mockup.description
+          image.thumbnail  = mockup.description.downcase.include? 'thumb '
           if image.respond_to?(:option_value_id=) && !is_thumbnail
             image.option_value_id = mockup_option_value_id(mockup, product)
           end
