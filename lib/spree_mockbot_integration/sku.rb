@@ -68,10 +68,10 @@ module SpreeMockbotIntegration
           idea = idea
         end
 
-        if idea.print_method == 'digital'
+        if idea.imprint_method == 'digital'
           return 2 if idea.base?
           return 1 unless idea.base?
-        elsif idea.print_method == 'transfer'
+        elsif idea.imprint_method == 'transfer'
           return 3
         else
           return 4
