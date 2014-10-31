@@ -63,11 +63,13 @@ module SpreeMockbotIntegration
       def assure_print_method(idea)
         case idea
         when String
-          Spree::Mockbot::Idea.find(idea)
+          idea = Spree::Mockbot::Idea.find(idea)
         else
-          idea
+          idea = idea
         end
-          .base? ? 2 : 1
+
+        if idea.print_method == 'digital'
+          return idea.base? ? 2 : 1
         elsif idea.print_method == 'transfer'
           return 3
         else
