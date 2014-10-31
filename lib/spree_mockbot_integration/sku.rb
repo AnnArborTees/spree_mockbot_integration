@@ -19,7 +19,7 @@ module SpreeMockbotIntegration
         )
         size  = find_record(Spree::Crm::Size, :name, size_name)
         color = find_record(Spree::Crm::Color, :name, color_name)
-        
+
         validate_v0(imprintable, :imprintable, length: 4)
         validate_v0(size,  :size,  length: 2)
         validate_v0(color, :color, length: 3)
@@ -68,6 +68,12 @@ module SpreeMockbotIntegration
           idea
         end
           .base? ? 2 : 1
+        elsif idea.print_method == 'transfer'
+          return 3
+        else
+          return 4
+        end
+
       end
 
       def find_record(type, field, value)
