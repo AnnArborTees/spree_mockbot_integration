@@ -282,7 +282,7 @@ module Spree
             variant.option_values << option_value(style_type, imprintable.common_name)
           end
 
-          set_google_attributes_on(variant) if variant.respond_to?(:google_product)
+          set_google_attributes_on(variant) if defined? Spree::GoogleProduct
 
           raise_if(product, !variant.save || !product.valid?, true) do
             "Couldn't add variant to #{product.name} (#{variant.sku}). "\
