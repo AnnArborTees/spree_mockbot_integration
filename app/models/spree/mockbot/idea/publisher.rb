@@ -292,6 +292,7 @@ module Spree
         end
 
         def set_google_attributes_on(variant)
+          variant.google_product ||= Spree::GoogleProduct.create
           google_product = variant.google_product
 
           google_product.google_product_category =
