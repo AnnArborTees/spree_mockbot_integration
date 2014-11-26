@@ -282,11 +282,21 @@ module Spree
             variant.option_values << option_value(style_type, imprintable.common_name)
           end
 
+          set_google_attributes_on(variant) if variant.respond_to?(:google_product)
+
           raise_if(product, !variant.save || !product.valid?, true) do
             "Couldn't add variant to #{product.name} (#{variant.sku}). "\
             "Product errors include: #{product.errors.full_messages}. "\
             "Variant errors include: #{variant.errors.full_messages}"
           end
+        end
+
+        def set_google_attributes_on(variant)
+          google_product = variant.google_product
+
+          google_product.google_product_category =
+            'Apparel & Accessories > Clothing > Shirts & Tops > T-Shirts'
+          google_product.automatically_update = true
         end
 
         def upcharge_for(size, imprintable)
