@@ -91,6 +91,7 @@ module Spree
                   product.log_update "Unable to assign product stores. Is "\
                                      "the spree-multi-domain gem installed?"
                 end
+                product.taxon_ids = idea.taxon_ids.split(',')
                 product.save
               end
 
@@ -260,7 +261,7 @@ module Spree
             imprintable.common_name,
             size,
             product_color.name
-          ) 
+          )
 
           variant = product.variants
             .where(sku: sku).first || Spree::Variant.new(track_inventory: false)
