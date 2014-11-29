@@ -28,17 +28,17 @@ module Spree
         copy_to_product Spree::Product.new
       end
 
-      def product_name(color=nil)
-        "#{working_name} #{product_type}"
+      def spree_product_name(color=nil)
+        "#{product_name} #{product_type}"
       end
 
       def product_slug(color)
-        "#{product_name(color)}-#{color_str(color)}".parameterize
+        "#{spree_product_name(color)}-#{color_str(color)}".parameterize
       end
 
       def copy_to_product(product, color)
-        product.name        = product_name(color)
-        product.description = description || working_description
+        product.name        = spree_product_name(color)
+        product.description = description || ""
         product.slug        = product_slug(color)
         product.price       = base_price
         product.meta_description = meta_description

@@ -194,6 +194,8 @@ module Spree
                                    "the annarbortees-theme gem installed?"
               end
 
+              product.price = product.variants.joins(:prices).minimum(:amount)
+
               if product.save
                 product.log_update "Assigned product.layout 'imprinted_apparel' to  #{idea.sku}"
               else
