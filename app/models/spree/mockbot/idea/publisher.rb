@@ -86,12 +86,12 @@ module Spree
                 idea.copy_to_product(product, color)
                 idea.assign_sku_to product
                 if product.respond_to?(:store_ids=)
-                  product.store_ids = idea.store_ids.split(',')
+                  product.store_ids = idea.store_ids.split(',').uniq
                 else
                   product.log_update "Unable to assign product stores. Is "\
                                      "the spree-multi-domain gem installed?"
                 end
-                product.taxon_ids = idea.taxon_ids.split(',')
+                product.taxon_ids = idea.taxon_ids.split(',').uniq
                 product.save
               end
 
