@@ -68,12 +68,12 @@ module SpreeMockbotIntegration
           idea = idea
         end
 
-        if idea.imprint_method == 'digital'
-          return 2 if idea.base?
-          return 1 unless idea.base?
-        elsif idea.imprint_method == 'transfer'
+        if idea.artworks.first.imprint_method.name.downcase == 'digital'
+          return 2 if idea.artworks.first.base?
+          return 1 unless idea.artworks.first.base?
+        elsif idea.artworks.first.imprint_method.name.downcase == 'transfer'
           return 3
-        else
+        elsif idea.artworks.first.imprint_method.name.downcase == 'embroidery'
           return 4
         end
 
