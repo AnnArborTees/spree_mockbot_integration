@@ -20,9 +20,9 @@ module SpreeMockbotIntegration
         size  = find_record(Spree::Crm::Size, :name, size_name)
         color = find_record(Spree::Crm::Color, :name, color_name)
 
-        validate_v0(imprintable, :imprintable, length: 4)
-        validate_v0(size,  :size,  length: 2)
-        validate_v0(color, :color, length: 3)
+        validate_v0(imprintable, :imprintable, length: 4, value: imprintable_name)
+        validate_v0(size,  :size,  length: 2, value: size_name)
+        validate_v0(color, :color, length: 3, value: color_name)
 
         "#{product_code}-"\
         "#{print_method}#{imprintable.sku}#{size.sku}#{color.sku}"
@@ -34,7 +34,9 @@ module SpreeMockbotIntegration
         expected_length = options[:length]
         raise "Need expected length for validate_v0" if expected_length.nil?
 
-        raise SkuError, "Couldn't find #{record_name} in CRM." if record.nil?
+        record_value = options[:value] || 'nil'
+
+        raise SkuError, "Couldn't find #{record_name} #{record_value} in CRM." if record.nil?
         if record.sku.size != expected_length
           raise SkuError,
                 "Expected #{expected_length} digits for #{record_name} sku: "\
@@ -75,7 +77,6 @@ module SpreeMockbotIntegration
         elsif idea.artworks.first.imprint_method.name.downcase == 'embroidery'
           return 4
         end
-
       end
 
       def base?(idea)
@@ -87,8 +88,16 @@ module SpreeMockbotIntegration
         case value
         when type
           value
-        else
+        when String, Symbol, Fixnum, Float
           type.where(field => value).first
+        else
+          # TODO In Idea::Publisher#add_variant, we pass an ActiveResource
+          # relation directly (imprintable_variant.size), which will NOT be
+          # of type Crm::Size. If this becomes problematic, it may be good
+          # to make a way to check if such a case specifically, rather than
+          # falling back to this.
+          # (Although if nil is passed, this will be nil, which is correct)
+          value
         end
       end
     end
