@@ -85,13 +85,16 @@ module Spree
               protect_against_sql_error(product) do
                 idea.copy_to_product(product, color)
                 idea.assign_sku_to product
-                if product.respond_to?(:store_ids=)
+                if product.respond_to?(:store_ids=) && !idea.store_ids.nil?
                   product.store_ids = idea.store_ids.split(',').uniq
                 else
                   product.log_update "Unable to assign product stores. Is "\
                                      "the spree-multi-domain gem installed?"
                 end
-                product.taxon_ids = idea.taxon_ids.split(',').uniq
+
+                unless idea.taxon_ids.nil?
+                  product.taxon_ids = idea.taxon_ids.split(',').uniq
+                end
                 product.save
               end
 
@@ -174,7 +177,9 @@ module Spree
                     product,
                     "Either the imprintable with common name "\
                     "'#{imprintable.common_name}', or the color "\
-                    "'#{product_color.name}' could not be found in CRM."
+                    "'#{product_color.name}' could not be found in CRM. "\
+                    "(If you are sure they exist, then this is something "\
+                    "weird and internal)."
                   )
                 end
               end
@@ -304,6 +309,8 @@ module Spree
         end
 
         def set_google_attributes_on(variant)
+          return unless Spree::GoogleShoppingSetting.instance.use_google_shopping?
+
           variant.google_product ||= Spree::GoogleProduct.create
           google_product = variant.google_product
 
