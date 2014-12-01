@@ -69,14 +69,18 @@ module SpreeMockbotIntegration
         end
 
         if idea.artworks.first.imprint_method.name.downcase == 'digital'
-          return 2 if idea.artworks.first.base?
-          return 1 unless idea.artworks.first.base?
+          return base?(idea) ? 2 : 1
         elsif idea.artworks.first.imprint_method.name.downcase == 'transfer'
           return 3
         elsif idea.artworks.first.imprint_method.name.downcase == 'embroidery'
           return 4
         end
 
+      end
+
+      def base?(idea)
+        base = idea.artworks.first.try(:base)
+        base && base != 'false'
       end
 
       def find_record(type, field, value)
