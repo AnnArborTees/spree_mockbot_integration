@@ -217,18 +217,27 @@ module Spree
           end
         end
 
+        def do_everything!
+          raise_if_already_done!
+
+          perform_step! until current_step == 'done'
+        end
+
         def perform_step!
-          raise "Already done!" if current_step == 'done'
+          raise_if_already_done!
 
           self.current_step = Publisher.step_after nil if current_step.nil?
 
           send(current_step)
           self.current_step = Publisher.step_after current_step
-          save
-          raise "Failed to advance to the next step!" unless valid?
+          save!
         end
 
         protected
+
+        def raise_if_already_done!
+          raise PublishError.new(nil), 'Already done!' if current_step == 'done'
+        end
 
         def step(str, &block)
           unless self.current_step == str.to_s
