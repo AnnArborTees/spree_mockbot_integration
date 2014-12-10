@@ -14,6 +14,9 @@ FactoryGirl.define do
       sequence(:working_name) do |n|
         "Idea number #{n}"
       end
+      sequence(:product_name) do |n|
+        "Idea number #{n}"
+      end
       sequence(:working_description) do |n|
         "The idea with the sequence number #{n} generated with FactoryGirl"
       end
@@ -29,6 +32,7 @@ FactoryGirl.define do
       imprintables []
 
       store_ids '1,3,4'
+      taxon_ids '1,4'
 
       product_type 'T-Shirt'
       meta_keywords 'test one two three'

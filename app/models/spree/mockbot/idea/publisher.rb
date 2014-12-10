@@ -304,7 +304,12 @@ module Spree
             variant.option_values << option_value(style_type, imprintable.common_name)
           end
 
-          set_google_attributes_on(variant) if defined? Spree::GoogleProduct
+          # NOTE
+          # Commented out, since it appears the image urls are still being processed
+          # by the time this gets called, so products will have to be uploaded
+          # to Google some time after being published from MockBot.
+          #
+          # set_google_attributes_on(variant) if defined? Spree::GoogleProduct
 
           raise_if(product, !variant.save || !product.valid?, true) do
             "Couldn't add variant to #{product.name} (#{variant.sku}). "\
