@@ -95,7 +95,12 @@ module Spree
                 unless idea.taxon_ids.nil?
                   product.taxon_ids = idea.taxon_ids.split(',').uniq
                 end
-                product.save
+                if product.new_record? &&
+                    (existing = Spree::Product.where(slug: product.slug).first)
+                  raise PublishError.new(product), "Slug #{product.slug} is already "\
+                    "taken by #{existing}"
+                end
+                product.save!
               end
 
               raise_if(product, !product.valid?, true) do
