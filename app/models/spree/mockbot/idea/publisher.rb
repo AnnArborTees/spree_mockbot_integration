@@ -115,6 +115,7 @@ module Spree
 
         def import_images
           step :import_images do
+            return unless idea.are_mockups_changed?
             idea.associated_spree_products.each do |product|
               begin
                 color = color_of_product(idea, product)
@@ -217,6 +218,9 @@ module Spree
 
             begin
               idea.update_attributes status: 'Published'
+              idea.update_attributes are_mockups_changed: false
+              idea.update_attributes is_copy_changed: false
+
             rescue ActiveResource::ServerError
               raise PublishError.new(idea),
                                   "Something went wrong on MockBot's end, and "\
