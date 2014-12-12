@@ -277,7 +277,7 @@ module Spree
 
         def add_variant(idea, product, imprintable, imprintable_variant)
           product_color = color_of_product(idea, product)
-          color_value = option_value(color_type, product_color.name)
+          color_value   = option_value(color_type, product_color.name)
 
           size = imprintable_variant.size
 

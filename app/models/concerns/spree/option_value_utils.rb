@@ -1,7 +1,7 @@
 module Spree
   module OptionValueUtils
     def option_value(type, value, presentation = nil)
-      presentation = value unless !presentation.nil?
+      presentation = value if presentation.nil?
       assure(Spree::OptionValue,
         option_type_id: option_type(type).id,
         name:           value,
