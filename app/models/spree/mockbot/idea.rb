@@ -19,7 +19,7 @@ module Spree
       def product_of_color(color)
         # associated_spree_products.where(slug: product_slug(color)).first
         associated_spree_products
-          .with_option_value(option_value(color_type, color_str(color)))
+          .with_option_value(color_type, color_str(color))
           .first
       end
 
