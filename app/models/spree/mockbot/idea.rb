@@ -39,6 +39,19 @@ module Spree
         "#{spree_product_name(color)}-#{color_str(color)}".parameterize
       end
 
+      def assign_product_type_to(product, raise_on_fail = false)
+        prop = Spree::Property.find_by(name: 'product-type')
+        if prop.nil?
+          prop = Spree::Property.create(name: 'product-type', presentation: 'Product Type')
+        end
+
+        prod_prop = Spree::ProductProperty.new(product_id: product.id, property_id: prop.id, value: product_type)
+        prod_prop.send(raise_on_fail ? :save! : :save)
+      end
+      def assign_product_type_to!(product)
+        assign_product_type_to!(product, true)
+      end
+
       def copy_to_product(product, color)
         product.name        = spree_product_name(color)
         product.description = description || ""

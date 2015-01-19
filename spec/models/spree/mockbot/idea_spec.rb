@@ -83,6 +83,30 @@ describe Spree::Mockbot::Idea, idea_spec: true do
     end
   end
 
+  describe '#assign_product_type_to', story_146: true do
+    let!(:idea) { create :mockbot_idea, product_type: 't-shirt' }
+    let!(:product) { create :product }
+
+    context 'when product-type property does not exist' do
+      it 'creates it' do
+        expect(Spree::Property.count).to eq 0
+        expect(idea.assign_product_type_to(product)).to eq true
+        expect(Spree::Property.count).to eq 1
+        expect(product.property('product-type')).to_not be_nil
+      end
+    end
+
+    context 'when product-type property exists' do
+      let!(:property) { Spree::Property.create(name: 'product-type', presentation: 'P') }
+
+      it 'uses it' do
+        expect(idea.assign_product_type_to(product)).to eq true
+        expect(product.properties).to include property
+        expect(product.property('product-type')).to_not be_nil
+      end
+    end
+  end
+
   describe '#copy_to_product', publish: true do
     let!(:idea) do
       create :mockbot_idea, working_name: 'Interesting', product_type: 'tee'

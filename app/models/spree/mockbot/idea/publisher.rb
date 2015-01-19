@@ -102,6 +102,7 @@ module Spree
                     "slug in order to publish #{idea.sku}."
                 end
                 product.save!
+                idea.assign_product_type_to!(product) unless idea.product_type.nil?
               end
 
               raise_if(product, !product.valid?, true) do
