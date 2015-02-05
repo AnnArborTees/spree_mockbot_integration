@@ -48,8 +48,9 @@ module Spree
         prod_prop = Spree::ProductProperty.new(product_id: product.id, property_id: prop.id, value: product_type)
         prod_prop.send(raise_on_fail ? :save! : :save)
       end
+
       def assign_product_type_to!(product)
-        assign_product_type_to!(product, true)
+        assign_product_type_to(product, true)
       end
 
       def copy_to_product(product, color)
