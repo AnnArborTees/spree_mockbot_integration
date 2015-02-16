@@ -117,7 +117,7 @@ module Spree
 
         def import_images
           step :import_images do
-            return unless idea.are_mockups_changed?
+            return if !(idea.associated_spree_products.map{|product| product.images.empty?}.include? true) and !idea.are_mockups_changed?
             idea.associated_spree_products.each do |product|
               begin
                 color = color_of_product(idea, product)
