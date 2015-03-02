@@ -236,6 +236,7 @@ module Spree
 
         def do_everything!
           raise_if_already_done!
+          raise_if_not_ready!
 
           perform_step! until current_step == 'done'
         end
@@ -254,6 +255,11 @@ module Spree
 
         def raise_if_already_done!
           raise PublishError.new(nil), 'Already done!' if current_step == 'done'
+        end
+
+
+        def raise_if_not_ready!
+          raise PublishError.new(nil), 'This idea is not ready to publish!' unless (idea.status.downcase == 'published' || idea.status.downcase == 'ready_to_publish')
         end
 
         def step(str, &block)
