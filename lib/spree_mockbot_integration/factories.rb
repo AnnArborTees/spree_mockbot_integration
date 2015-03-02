@@ -30,7 +30,7 @@ FactoryGirl.define do
       artworks []
       thumbnails []
       colors []
-      imprintables []
+      imprintable_ids ''
 
       store_ids '1,3,4'
       taxon_ids '1,4'
@@ -53,7 +53,7 @@ FactoryGirl.define do
         colors [Color.new("Red"),
                 Color.new("Blue"),
                 Color.new("Green")]
-        imprintables [imprintable_1, imprintable_2]
+        # imprintable_ids "#{imprintable_1.id}, #{imprintable_2.id}"
 
         factory :publishable_mockbot_idea do
           status 'Ready to Publish'

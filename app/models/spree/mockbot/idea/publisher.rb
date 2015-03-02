@@ -117,7 +117,7 @@ module Spree
 
         def import_images
           step :import_images do
-            return if !(idea.associated_spree_products.map{|product| product.images.empty?}.include? true) and !idea.are_mockups_changed?
+            return if !(idea.associated_spree_products.map{|product| product.images.empty?}.include? true) and !idea.are_mockups_changed? and idea.mockups.empty?
             idea.associated_spree_products.each do |product|
               begin
                 color = color_of_product(idea, product)
@@ -156,8 +156,7 @@ module Spree
 
               each_option_type(&add_to_set(product.option_types))
 
-              idea.imprintable_ids.split(',').each do |imprintable_id|
-                imprintable = crm_imprintable(imprintable_id)
+              idea.imprintables.each do |imprintable|
                 imprintable_variants = Spree::Crm::ImprintableVariant.where(
                     imprintable: imprintable.common_name,
                           color: product_color.name

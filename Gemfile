@@ -10,6 +10,9 @@ gem 'spree_frontend', github: 'spree/spree', branch: branch
 gem 'spree_auth_devise', github: 'spree/spree_auth_devise', branch: branch
 gem 'spree_annarbortees_theme', github: 'annarbortees/spree_annarbortees_theme', branch: branch
 gem 'spree_multi_domain', github: 'annarbortees/spree-multi-domain', branch: branch
+gem 'spree_solr', github: 'annarbortees/spree_solr', branch: branch
+gem 'sunspot_rails'
+gem 'spree_google_trusted_store', github: 'annarbortees/spree_google_trusted_store', branch: branch
 
 group :development, :test do
   gem 'webmock'

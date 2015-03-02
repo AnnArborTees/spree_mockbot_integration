@@ -17,7 +17,9 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
 
   describe '#current_step=', step: true do
     let!(:publisher) { build_stubbed :mockbot_idea_publisher }
-    let!(:idea) { build_stubbed :mockbot_idea_with_colors }
+    let!(:imprintable1) { create :crm_imprintable, name: "Gildan 5000", common_name: "Unisex",  sku: "1234" }
+    let!(:imprintable2) { create :crm_imprintable, name: "American Apparel Standard or whatever", common_name: "T-Shirt", sku: "9876"  }
+    let!(:idea) { create :mockbot_idea_with_colors, imprintable_ids: "#{imprintable1.id},#{imprintable2.id}" }
 
     before :each do
       allow(Spree::Mockbot::Idea::Publisher).to receive(:steps)
@@ -43,7 +45,17 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
   context 'with an idea' do
     let!(:store_1) { create :default_store }
     let!(:store_2) { create :alternative_store }
-    let!(:idea) { create :mockbot_idea_with_images, store_ids: "#{store_1.id},#{store_2.id}" }
+    let!(:taxon_1) { create :taxon }
+    let!(:taxon_2) { create :taxon }
+    let!(:idea) { create :mockbot_idea_with_images, store_ids: "#{store_1.id},#{store_2.id}", taxon_ids: "#{taxon_1.id},#{taxon_2.id}" }
+
+    let!(:imprintable) { create :crm_imprintable, name: "Gildan 5000", common_name: "Unisex",  sku: "1234" }
+
+    before(:each) do
+      idea.mockups.each do |mockup|
+        mockup.imprintable_id = imprintable.id
+      end
+    end
 
     describe 'Step methods' do
       let(:publisher) do
@@ -173,7 +185,7 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
               .to receive(:option_value_id=)
           end
 
-          it 'assigns the option_value_id to the option value with matching apparel-style imprintable common name' do
+          it 'assigns the option_value_id to the option value with matching apparel-style imprintable common name', debug: true do
             publisher.generate_products
             product = idea.associated_spree_products.first
             allow(idea).to receive(:associated_spree_products)
@@ -185,7 +197,7 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
             publisher.import_images
 
             images.each do |image|
-              expect(image).to receive(:option_value_id)
+              expect(Spree::OptionValue.where id: image.option_value_id).to_not be_nil
             end
           end
         end
@@ -332,7 +344,7 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
 
           it 'should format the sku using sku version 0', bs: true do
             2.times { idea.colors.pop }
-            idea.imprintables.pop  # Todo: Story 126
+            idea.imprintable_ids = idea.imprintables.first.id.to_s
 
             expect(idea.colors.map(&:name)).to eq ['Red']
             expect(idea.imprintables.first.common_name).to eq 'Unisex'

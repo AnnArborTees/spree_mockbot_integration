@@ -35,6 +35,10 @@ module Spree
         "#{product_name} #{product_type}"
       end
 
+      def imprintables
+        imprintable_ids.split(',').map(&Spree::Crm::Imprintable.method(:find))
+      end
+
       def product_slug(color)
         "#{spree_product_name(color)}-#{color_str(color)}".parameterize
       end
@@ -87,7 +91,7 @@ module Spree
           image.attachment = open mockup_url mockup
           image.position   = is_thumbnail ? 0 : product.images.count
           image.alt        = mockup.description
-          image.thumbnail  = mockup.description.downcase.include? 'thumb'
+          image.thumbnail  = mockup.description.downcase.include? 'thumb' if image.respond_to?(:thumbnail=)
           if image.respond_to?(:option_value_id=) && !is_thumbnail
             image.option_value_id = mockup_option_value_id(mockup, product)
           end
