@@ -17,7 +17,7 @@ module SpreeMockbotIntegration
         product_code = assure_product_code idea
         print_method = assure_print_method idea
         imprintable = find_record(
-          Spree::Crm::Imprintable, :common_name, imprintable_name
+            Spree::Crm::Imprintable, :id, imprintable_name
         )
         size  = find_record(Spree::Crm::Size, :name, size_name)
         color = find_record(Spree::Crm::Color, :name, color_name)
@@ -72,12 +72,12 @@ module SpreeMockbotIntegration
           idea = idea
         end
 
-        if idea.artworks.first.imprint_method.name.downcase == 'digital'
-          return base?(idea) ? 2 : 1
-        elsif idea.artworks.first.imprint_method.name.downcase == 'transfer'
-          return 3
-        elsif idea.artworks.first.imprint_method.name.downcase == 'embroidery'
-          return 4
+        return 0 if idea.artworks.empty?
+
+        case idea.artworks.first.imprint_method.name.downcase
+        when 'digital' then return base?(idea) ? 2 : 1
+        when 'transfer' then return 3
+        when 'embroidery' then return 4
         end
       end
 
@@ -91,7 +91,11 @@ module SpreeMockbotIntegration
         when type
           value
         when String, Symbol, Fixnum, Float
-          type.where(field => value).first
+          if field == :id
+            type.find(value)
+          else
+            type.where(field => value).first
+          end
         else
           # TODO In Idea::Publisher#add_variant, we pass an ActiveResource
           # relation directly (imprintable_variant.size), which will NOT be

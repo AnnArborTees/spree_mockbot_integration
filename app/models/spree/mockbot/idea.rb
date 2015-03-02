@@ -136,12 +136,12 @@ module Spree
 
 
       def mockup_option_value_id(mockup, product)
-        imprintable = crm_imprintable(mockup.imprintable_id)
+        imprintable = Crm::Imprintable.find(mockup.imprintable_id)
         Spree::OptionValue
           .where(option_type_id: style_type.id)
           .joins(:variants)
           .where(spree_option_values_variants: { variant_id: product.variants.map(&:id) })
-          .where('lower(name) = ?', imprintable.common_name.downcase) # TODO 126 mockup no longer has imprintable, just id, need to find
+          .where('lower(name) = ?', imprintable.common_name.downcase)
           .first
           .try(:id)
       end

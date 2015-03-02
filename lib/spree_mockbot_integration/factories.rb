@@ -27,6 +27,7 @@ FactoryGirl.define do
       priority 3
 
       mockups []
+      artworks []
       thumbnails []
       colors []
       imprintables []

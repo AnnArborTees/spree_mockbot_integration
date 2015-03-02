@@ -13,26 +13,37 @@ describe SpreeMockbotIntegration::Sku, sku_spec: true do
       context 'with valid imprintable, size, and color in crm' do
         let!(:stub_method) { :build_stubbed }
 
-        let(:idea) { send stub_method, :mockbot_idea, sku: 'test_idea', base: true }
+        let(:artwork) do
+          artwork = Object.new
+          allow(artwork).to receive(:base).and_return 'true'
+          allow(artwork)
+            .to receive_message_chain(:imprint_method, :name)
+            .and_return 'digital'
+          artwork
+        end
+
+        let(:idea) { send stub_method, :mockbot_idea, sku: 'test_idea', artworks: [artwork] }
         let(:size) { send stub_method, :crm_size,
           sku: '11',
           name: 'Small' }
         let(:color) { send stub_method, :crm_color,
           sku: '333',
           name: 'Red' }
-        let(:imprintable) { send stub_method, :crm_imprintable,      # Todo: Story 126
+        let(:imprintable) { send stub_method, :crm_imprintable,
           sku: '7777',
           common_name: 'Test Style' }
 
         context 'and in the database' do
           let!(:stub_method) { :create }
           before(:each) do
-            idea; size; color; imprintable  # Todo: Story 126
+            idea; size; color; imprintable
+            idea.artworks = []
+            idea.save
           end
 
           it 'should return the appropriate value when passed names' do
-            sku = build.('test_idea', 'Test Style', 'Small', 'Red')
-            expect(sku).to eq '0-test_idea-2777711333'
+            sku = build.('test_idea', imprintable.id, 'Small', 'Red')
+            expect(sku).to eq '0-test_idea-0777711333'
           end
         end
 
@@ -46,13 +57,13 @@ describe SpreeMockbotIntegration::Sku, sku_spec: true do
             /Couldn\'t find idea in MockBot/
           end
 
-          subject { proc { build.(nil, imprintable, size, color) } }     # Todo: Story 126
+          subject { proc { build.(nil, imprintable, size, color) } }
           it { is_expected.to raise_error sku_error, message }
         end
 
         context 'with invalid imprintable' do
           let!(:message) do
-            /Couldn\'t find imprintable in CRM/
+            /Couldn\'t find imprintable \w+ in CRM/
           end
 
           subject { proc { build.(idea, nil, size, color) } }
@@ -61,7 +72,7 @@ describe SpreeMockbotIntegration::Sku, sku_spec: true do
 
         context 'with invalid size' do
           let!(:message) do
-            /Couldn\'t find size in CRM/
+            /Couldn\'t find size \w+ in CRM/
           end
 
           subject { proc { build.(idea, imprintable, nil, color) } }
@@ -70,7 +81,7 @@ describe SpreeMockbotIntegration::Sku, sku_spec: true do
 
         context 'with invalid color' do
           let!(:message) do
-            /Couldn\'t find color in CRM/
+            /Couldn\'t find color \w+ in CRM/
           end
 
           subject { proc { build.(idea, imprintable, size, nil) } }

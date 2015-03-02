@@ -286,7 +286,7 @@ module Spree
 
           sku = SpreeMockbotIntegration::Sku.build(
             0, idea,
-            imprintable.common_name,
+            imprintable,
             size,
             product_color.name
           )
