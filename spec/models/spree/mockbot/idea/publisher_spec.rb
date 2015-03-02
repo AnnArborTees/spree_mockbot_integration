@@ -116,7 +116,7 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
 
         context "when there's already a product matching the idea's sku/slug" do
           let!(:matching_product) { create :custom_product, name: 'Matching' }
-          
+
           before :each do
             matching_product.master.sku = idea.sku
             matching_product.slug = idea.product_slug 'Red'
@@ -149,7 +149,7 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
         it "should add images based off of the idea's mockups" do
           publisher.generate_products
           publisher.import_images
-          
+
           idea.associated_spree_products.each do |product|
             expect(product.images.count).to eq 2
           end
@@ -194,7 +194,7 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
           before :each do
             allow(idea).to receive(:associated_spree_products)
               .and_return([dummy_product])
-            
+
             allow(idea).to receive(:copy_images_to)
               .and_return [[], [Object.new] * 3]
           end
@@ -215,23 +215,23 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
           create :crm_imprintable, common_name: 'Unisex', sku: '5555'
         end
         let!(:other_crm_imprintable) do
-          create :crm_imprintable, 
+          create :crm_imprintable,
                  common_name: 'T-Shirt',
                  sku: '6666'
         end
 
         let!(:product_1) do
-          build_stubbed :custom_product, 
+          build_stubbed :custom_product,
                         name: 'First Product',
                         available_on: nil
         end
         let!(:product_2) do
-          build_stubbed :custom_product, 
+          build_stubbed :custom_product,
                         name: 'Second Product',
                         available_on: nil
         end
         let!(:product_3) do
-          build_stubbed :custom_product, 
+          build_stubbed :custom_product,
                         name: 'Third Product',
                         available_on: nil
         end
@@ -301,7 +301,7 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
             size_type  = Spree::OptionType.where(name: 'apparel-size')
             color_type = Spree::OptionType.where(name: 'apparel-color')
             style_type = Spree::OptionType.where(name: 'apparel-style')
-            
+
             [size_type, color_type, style_type].each do |it|
               expect(it).to exist
             end
@@ -332,7 +332,7 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
 
           it 'should format the sku using sku version 0', bs: true do
             2.times { idea.colors.pop }
-            idea.imprintables.pop
+            idea.imprintables.pop  # Todo: Story 126
 
             expect(idea.colors.map(&:name)).to eq ['Red']
             expect(idea.imprintables.first.common_name).to eq 'Unisex'
@@ -341,7 +341,7 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
 
             product = product_1
 
-            idea.imprintables.first.sku = "5555"
+            idea.imprintables.first.sku = "5555"  # Todo: Story 126
 
             publisher.generate_variants
             expect(product.variants.size).to eq 2

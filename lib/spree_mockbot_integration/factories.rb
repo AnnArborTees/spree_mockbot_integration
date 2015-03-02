@@ -5,7 +5,7 @@ FactoryGirl.define do
   # require 'spree_mockbot_integration/factories'
   FactoryGirl.define do
     Color = Struct.new(:name, :sku)
-    Mockup = Struct.new(:file_url, :description, :color, :imprintable)
+    Mockup = Struct.new(:file_url, :description, :color, :imprintable_id) # Todo: Story 126
     Imprintable = Struct.new(:name, :common_name, :sku)
     Size = Struct.new(:display_value, :sku)
 
@@ -46,7 +46,7 @@ FactoryGirl.define do
 
       factory :mockbot_idea_with_colors do
         imprintable_1 = Imprintable.new("Gildan 5000", "Unisex",  "1234")
-        imprintable_2 = Imprintable.new("American Apparel Standard or whatever", 
+        imprintable_2 = Imprintable.new("American Apparel Standard or whatever",
                                         "T-Shirt", "9876")
 
         colors [Color.new("Red"),

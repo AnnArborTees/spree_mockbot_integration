@@ -88,7 +88,7 @@ RSpec.configure do |config|
     EndpointActions.mock_for_imprintable_variants(*crm_args)
     EndpointActions.mock_for_sizes(*crm_args)
     EndpointActions.mock_for_colors(*crm_args)
-    EndpointActions.mock_for_imprintables(*crm_args)
+    EndpointActions.mock_for_imprintables(*crm_args) # Todo: Story 126
   end
 
   # Before each spec check if it is a Javascript test and switch between using database transactions or not where necessary.

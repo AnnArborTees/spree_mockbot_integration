@@ -156,7 +156,8 @@ module Spree
 
               each_option_type(&add_to_set(product.option_types))
 
-              idea.imprintables.each do |imprintable|
+              idea.imprintable_ids.split(',').each do |imprintable_id|
+                imprintable = crm_imprintable(imprintable_id)
                 imprintable_variants = Spree::Crm::ImprintableVariant.where(
                     imprintable: imprintable.common_name,
                           color: product_color.name
@@ -349,10 +350,8 @@ module Spree
           end
         end
 
-        def crm_imprintable(imprintable)
-          Spree::Crm::Imprintable
-            .where(common_name: imprintable.common_name)
-            .first
+        def crm_imprintable(imprintable_id)
+          Spree::Crm::Imprintable.find(imprintable_id)
         end
 
         def color_of_product(idea, product)

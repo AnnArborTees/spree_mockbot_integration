@@ -11,6 +11,8 @@ module SpreeMockbotIntegration
         "#{version}-#{builder[*args]}"
       end
 
+
+      # STORY-126 Anywhere that finds by common_name should find by imprintable_id
       def build_version_0(idea, imprintable_name, size_name, color_name)
         product_code = assure_product_code idea
         print_method = assure_print_method idea

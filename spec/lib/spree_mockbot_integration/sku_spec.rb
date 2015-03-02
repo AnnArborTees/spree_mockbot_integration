@@ -20,14 +20,14 @@ describe SpreeMockbotIntegration::Sku, sku_spec: true do
         let(:color) { send stub_method, :crm_color,
           sku: '333',
           name: 'Red' }
-        let(:imprintable) { send stub_method, :crm_imprintable,
+        let(:imprintable) { send stub_method, :crm_imprintable,      # Todo: Story 126
           sku: '7777',
           common_name: 'Test Style' }
 
         context 'and in the database' do
           let!(:stub_method) { :create }
           before(:each) do
-            idea; size; color; imprintable
+            idea; size; color; imprintable  # Todo: Story 126
           end
 
           it 'should return the appropriate value when passed names' do
@@ -46,7 +46,7 @@ describe SpreeMockbotIntegration::Sku, sku_spec: true do
             /Couldn\'t find idea in MockBot/
           end
 
-          subject { proc { build.(nil, imprintable, size, color) } }
+          subject { proc { build.(nil, imprintable, size, color) } }     # Todo: Story 126
           it { is_expected.to raise_error sku_error, message }
         end
 
