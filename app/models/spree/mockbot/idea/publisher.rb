@@ -219,9 +219,11 @@ module Spree
             end
 
             begin
-              idea.update_attributes status: 'Published'
-              idea.update_attributes are_mockups_changed: false
-              idea.update_attributes is_copy_changed: false
+              idea.update_attributes(
+                status: 'Published',
+                are_mockups_changed: false,
+                is_copy_changed: false
+              )
 
             rescue ActiveResource::ServerError
               raise PublishError.new(idea),
