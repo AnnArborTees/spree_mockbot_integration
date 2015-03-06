@@ -1,0 +1,5 @@
+<% if can?(:admin, Spree::Update) %>
+  <%= content_tag :li, :class => ('active' if current == 'Stock Management') do %>
+    <%= link_to_with_icon 'icon-tasks', 'Update Log', spree.admin_product_updates_path(@product) %>
+  <% end  %>
+<% end %>

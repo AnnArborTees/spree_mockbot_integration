@@ -20,6 +20,7 @@ require 'database_cleaner'
 require 'ffaker'
 require 'endpoint_stub'
 require 'webmock'
+require 'shoulda/matchers'
 
 # Requires supporting ruby files with custom matchers and macros, etc,
 # in spec/support/ and its subdirectories.
@@ -30,6 +31,8 @@ require 'spree/testing_support/factories'
 require 'spree/testing_support/controller_requests'
 require 'spree/testing_support/authorization_helpers'
 require 'spree/testing_support/url_helpers'
+# Multi domain factories for stores
+require 'spree_multi_domain/factories'
 
 # Requires factories defined in lib/spree_mockbot_integration/factories.rb
 require 'spree_mockbot_integration/factories'
@@ -79,9 +82,14 @@ RSpec.configure do |config|
     # We also activate endpoint stub.
     EndpointStub.activate!
     WebMock.disable_net_connect! allow_localhost: true
-  end
 
-  EndpointActions.mock_for_ideas config, email: 'test@test.com', token: 'AbC123'
+    EndpointActions.mock_for_ideas(config, email: 'test@test.com', token: 'AbC123')
+    crm_args = [config, email: 'test@testcrm.com', token: 'zYx987']
+    EndpointActions.mock_for_imprintable_variants(*crm_args)
+    EndpointActions.mock_for_sizes(*crm_args)
+    EndpointActions.mock_for_colors(*crm_args)
+    EndpointActions.mock_for_imprintables(*crm_args)
+  end
 
   # Before each spec check if it is a Javascript test and switch between using database transactions or not where necessary.
   config.before :each do |example|

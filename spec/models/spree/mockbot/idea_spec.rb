@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe Spree::Mockbot::Idea, wip: true do
+describe Spree::Mockbot::Idea, idea_spec: true do
   describe '.all' do
     context 'there are 2 ideas' do
       before :each do
@@ -16,6 +16,15 @@ describe Spree::Mockbot::Idea, wip: true do
       it "returns an empty array" do
         expect(Spree::Mockbot::Idea.all.size).to eq 0
       end
+    end
+  end
+
+  describe '#publisher', idea_publisher: true do
+    let!(:idea) { create :mockbot_idea }
+    let!(:publisher) { create :mockbot_idea_publisher, idea_sku: idea.sku }
+
+    it 'returns the publisher with idea_sku = idea.sku' do
+      expect(idea.publisher).to eq publisher
     end
   end
 
@@ -51,29 +60,69 @@ describe Spree::Mockbot::Idea, wip: true do
       [product1, product2].each(&:save)
     end
 
-    describe '#associated_spree_products' do
+    describe '#associated_spree_products', associated_spree_products: true do
       it 'should return the product with the same sku as the idea' do
         expect(idea1.associated_spree_products).to include product1
         expect(idea1.associated_spree_products).to_not include product2
       end
     end
+
+    context 'with multiple products under the same sku' do
+      let!(:product1_2) { create :base_product }
+      before :each do
+        product1_2.master.sku = idea1.sku
+        product1_2.save
+      end
+
+      it 'should return them all' do
+        expect(idea1.associated_spree_products.count).to eq 2
+        expect(idea1.associated_spree_products).to include product1
+        expect(idea1.associated_spree_products).to include product1_2
+        expect(idea1.associated_spree_products).to_not include product2
+      end
+    end
   end
 
-  describe '#build_product', publish: true do
-    let!(:idea) { create :mockbot_idea }
-    subject(:subject) { idea.build_product }
+  describe '#assign_product_type_to', story_146: true do
+    let!(:idea) { create :mockbot_idea, product_type: 't-shirt' }
+    let!(:product) { create :product }
 
-    it 'should create a new (unsaved) Spree::Product' do
-      expect(subject).to be_a Spree::Product
-      expect(subject).to be_new_record
+    context 'when product-type property does not exist' do
+      it 'creates it' do
+        expect(Spree::Property.count).to eq 0
+        expect(idea.assign_product_type_to(product)).to eq true
+        expect(Spree::Property.count).to eq 1
+        expect(product.property('product-type')).to_not be_nil
+      end
     end
 
+    context 'when product-type property exists' do
+      let!(:property) { Spree::Property.create(name: 'product-type', presentation: 'P') }
+
+      it 'uses it' do
+        expect(idea.assign_product_type_to(product)).to eq true
+        expect(product.properties).to include property
+        expect(product.property('product-type')).to_not be_nil
+      end
+    end
+  end
+
+  describe '#copy_to_product', publish: true do
+    let!(:idea) do
+      create :mockbot_idea, working_name: 'Interesting', product_type: 'tee'
+    end
+    let(:red_product) { idea.copy_to_product Spree::Product.new, 'Red' }
+
     it 'should assign the name to the idea name and type' do
-      expect(subject.name).to eq "#{idea.working_name} #{idea.product_type}"
+      expect(red_product.name).to eq "#{idea.working_name} #{idea.product_type}"
     end
 
     it 'should assign the description directly' do
-      expect(subject.description).to eq idea.description
+      expect(red_product.description).to eq idea.description
+    end
+
+    it 'should assign the slug to the idea name + type + given color', story_145: true do
+      expect(red_product.slug).to eq "interesting-tee-red"
     end
 
     context 'shipping category' do
@@ -81,14 +130,14 @@ describe Spree::Mockbot::Idea, wip: true do
         let!(:shipping_category) {create :shipping_category, name: "Test Shipping"}
 
         it 'should find the shipping category with the given name' do
-          expect(subject.shipping_category).to_not be_nil
-          expect(subject.shipping_category).to eq shipping_category
+          expect(red_product.shipping_category).to_not be_nil
+          expect(red_product.shipping_category).to eq shipping_category
         end
       end
 
       it 'should create a spree shipping category' do
-        expect(subject.shipping_category).to_not be_nil
-        expect(subject.shipping_category).to eq Spree::ShippingCategory.
+        expect(red_product.shipping_category).to_not be_nil
+        expect(red_product.shipping_category).to eq Spree::ShippingCategory.
           where(name: idea.shipping_category).first
       end
     end
@@ -98,87 +147,27 @@ describe Spree::Mockbot::Idea, wip: true do
         let!(:tax_category) { create :tax_category, name: "Test Tax" }
 
         it 'should find the tax category and assign it' do
-          expect(subject.tax_category).to_not be_nil
-          expect(subject.tax_category).to eq tax_category
+          expect(red_product.tax_category).to_not be_nil
+          expect(red_product.tax_category).to eq tax_category
         end
       end
       it 'should be created and assigned if not existant' do
-        expect(subject.tax_category).to_not be_nil
-        expect(subject.tax_category).to eq Spree::TaxCategory.
+        expect(red_product.tax_category).to_not be_nil
+        expect(red_product.tax_category).to eq Spree::TaxCategory.
           where(name: idea.tax_category).first
       end
     end
 
     it 'should assign master price to the idea base price' do
-      expect(subject.price).to eq idea.base_price
+      expect(red_product.price).to eq idea.base_price
     end
 
     it 'should assign meta description' do
-      expect(subject.meta_description).to eq idea.meta_description
+      expect(red_product.meta_description).to eq idea.meta_description
     end
 
     it 'should assign meta keywords' do
-      expect(subject.meta_keywords).to eq idea.meta_keywords
-    end
-  end
-
-  describe '#publish!', publish: true do
-    subject(:subject) { create :mockbot_idea }
-
-    it 'should call #build_product' do
-      allow(subject).to receive(:build_product).and_return(subject.build_product)
-      subject.publish!
-      expect(subject).to have_received(:build_product)
-    end
-
-    it 'should create a new, live product' do
-      product_count = Spree::Product.count
-      subject.publish!
-      expect(Spree::Product.count).to eq product_count + 1
-    end
-
-    it "should assign the product's master variant sku to the idea sku" do
-      subject.publish!.each do |product|
-        expect(product.master.sku).to eq subject.sku
-      end
-    end
-
-    it 'should assign available_on to the current time' do
-      subject.publish!.each do |product|
-        expect(product.available_on).to be_within(1.minute).of Time.now
-      end
-    end
-
-    context 'when the idea has images', image: true do
-      subject(:subject) { create :mockbot_idea_with_images }
-
-      before(:each) { WebMockApi.stub_test_image! }
-
-      it 'should add images based off of the idea\'s mockups' do
-        subject.publish!.each do |product|
-          expect(product.images.count).to eq 2
-        end
-      end
-    end
-
-    context 'when the idea already has a matching product' do
-      let!(:matching_product) { create :custom_product, name: 'Matching' }
-      before :each do
-        matching_product.master.sku = subject.sku
-        matching_product.save
-      end
-
-      it 'should not create a new product' do
-        product_count = Spree::Product.count
-        subject.publish!
-        expect(Spree::Product.count).to eq product_count
-      end
-
-      it 'should copy its attributes over to the matching product' do
-        subject.publish!
-        matching_product.reload
-        expect(matching_product.name).to include subject.working_name
-      end
+      expect(red_product.meta_keywords).to eq idea.meta_keywords
     end
   end
 end

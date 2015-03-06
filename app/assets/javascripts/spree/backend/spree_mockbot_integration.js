@@ -1,27 +1,59 @@
 // Placeholder manifest file.
 // the installer will append this file to the app vendored assets here: vendor/assets/javascripts/spree/backend/all.js'
 
-$(function () {
-  $('#reset-mockbot-settings-button').click(function () {
-    $.ajax({
-      url: "/admin/mockbot/settings",
-      type: 'POST',
-      dataType: 'json'
-    })
-      .done(function (response) {
-        $('#mockbot-settings-form > .form-group > input').each(function () {
-          var fieldName = $(this).attr('name');
-          fieldName = fieldName.replace('mockbot_settings[', '');
-          fieldName = fieldName.replace(']', '');
+$(document).ready(function () {
 
-          $(this).attr('value', response[fieldName]);
-        });
-      })
+  if ($('.progress-dots').length) {
+    var dotCount = 0;
+    setInterval(function () {
+      dotCount += 1;
+      if (dotCount > 5)
+        dotCount = 1;
+      var dotStr = "";
+      for (var i = 1; i <= dotCount; i++) {
+        dotStr += '.';
+      }
 
-      .fail(function (jqXHR, textStatus) {
-        alert("Couldn't reach server.");
-      });
+      $('.progress-dots').text(dotStr);
+    }, 300);
 
-    return false;
+    $('#start-publish').click(function() {
+      $('.publish-step.active > .progress-dots').removeClass('hidden-dots');
+      return true;
+    });
+  }
+
+  $('a').click(function() {
+    if ($(this).prop('disabled'))
+      return false;
+    else
+      return true;
   });
+
 });
+
+var MockbotPublish = {
+  clearActives: function() {
+    $('.publish-step.active').each(function() {
+      var $this = $(this);
+      $this.removeClass('active');
+      $this.addClass('complete');
+
+      $icon = $this.find('i');
+      $icon.removeClass('icon-play');
+      $icon.addClass('icon-check');
+    });
+  },
+
+  updatePublisher: function(url) {
+    $.ajax({
+      url: url,
+      type: 'PUT',
+      dataType: 'script'
+    })
+      .fail(function (jqXHR, textStatus) {
+        if (textStatus == 'error') { return; }
+        alert(textStatus);
+      });
+  }
+}

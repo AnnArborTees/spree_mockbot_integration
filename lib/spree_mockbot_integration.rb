@@ -1,5 +1,6 @@
 require 'spree_core'
 require 'spree_mockbot_integration/engine'
+require 'spree_mockbot_integration/sku'
 require 'figaro'
 require 'active_resource'
 require 'active_resource_response'

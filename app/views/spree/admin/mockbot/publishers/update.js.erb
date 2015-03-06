@@ -1,0 +1,24 @@
+<% if @error %>
+$('.step-error').remove();
+$('.steps-container').after("<div class='row step-error'><%= @error %></div>");
+$('#start-publish').show();
+$('#publish-step-<%= @publisher.current_step_number -%> .progress-dots').addClass('hidden-dots');
+<% else %>
+  $('.step-error').remove();
+  $('#start-publish').hide();
+
+  MockbotPublish.clearActives();
+
+  <% if @publisher.done? %>
+    $('#cancel-publish').remove();
+    $('#publish-step-done').addClass('active');
+
+    $('#publish-buttons').append(
+      "<%=j render partial: 'finish_button', locals: { publisher: @publisher } %>"
+    );
+  <% else %>
+    $('#publish-step-<%= @publisher.current_step_number -%>').addClass('active');
+
+    MockbotPublish.updatePublisher("<%= spree.admin_mockbot_publisher_path(@publisher) %>");
+  <% end %>
+<% end %>

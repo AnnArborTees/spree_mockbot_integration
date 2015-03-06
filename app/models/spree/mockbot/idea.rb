@@ -1,29 +1,26 @@
 module Spree
   module Mockbot
     class Idea < ActiveResource::Base
-      class PublishError < StandardError
-        attr_reader :error_products
-        attr_reader :okay_products
-        def initialize(errored, not_errored)
-          @error_products = errored
-          @okay_products = not_errored
-        end
-      end
+      include RemoteModel
+      include OptionValueUtils
 
+      self.settings_class = MockbotSettings
+      authenticates_with_email_and_token
       add_response_method :http_response
       self.collection_parser = ::ActiveResourcePagination::PaginatedCollection
-      
-      def self.headers
-        (super or {}).merge(
-          'Mockbot-User-Token' => MockbotSettings.auth_token,
-          'Mockbot-User-Email' => MockbotSettings.auth_email
-        )
-      end
-
-      self.site = URI.parse(MockbotSettings.api_endpoint)
 
       def associated_spree_products
-        Spree::Product.where(spree_variants: {sku: self.sku}).joins(:master).readonly(false)
+        Spree::Product
+          .where(spree_variants: {sku: self.sku})
+          .joins(:master)
+          .readonly(false)
+      end
+
+      def product_of_color(color)
+        # associated_spree_products.where(slug: product_slug(color)).first
+        associated_spree_products
+          .with_option_value(color_type, color_str(color))
+          .first
       end
 
       def all_images
@@ -34,63 +31,96 @@ module Spree
         copy_to_product Spree::Product.new
       end
 
-      def publish!(ignore_errors=false)
-        if associated_spree_products.any?
-          products = associated_spree_products.to_a
+      def spree_product_name(color=nil)
+        "#{product_name} #{product_type}"
+      end
 
-          # We collect which products had issues saving and which didn't
-          # in case we need to examine this data.
-          error_products = []
-          okay_products = []
+      def product_slug(color)
+        "#{spree_product_name(color)}-#{color_str(color)}".parameterize
+      end
 
-          products.each do |product|
-            copy_to_product product
-            copy_images_to product
+      def assign_product_type_to(product, raise_on_fail = false)
+        prop = Spree::Property.find_by(name: 'product-type')
+        if prop.nil?
+          prop = Spree::Property.create(name: 'product-type', presentation: 'Product Type')
+        end
 
-            if product.valid? and product.images.all?(&:valid?)
-              okay_products << product
+        prod_prop = Spree::ProductProperty.new(product_id: product.id, property_id: prop.id, value: product_type)
+        prod_prop.send(raise_on_fail ? :save! : :save)
+      end
 
-              product.available_on = Time.now
-              product.save
-            else
-              error_products << product unless ignore_errors
-            end
+      def assign_product_type_to!(product)
+        assign_product_type_to(product, true)
+      end
+
+      def copy_to_product(product, color)
+        product.name        = spree_product_name(color)
+        product.description = description || ""
+        product.slug        = product_slug(color)
+        product.price       = base_price
+        product.meta_description = meta_description
+        product.meta_keywords    = meta_keywords
+
+        assure_category = lambda do |clazz, attrs|
+          (clazz.where(attrs).first || clazz.create(attrs)).id
+        end
+
+        product.shipping_category_id = assure_category
+          .(Spree::ShippingCategory, name: shipping_category)
+        product.tax_category_id = assure_category
+          .(Spree::TaxCategory, name: tax_category)
+
+        return product
+      end
+
+      def copy_images_to(product, color)
+        unless color.is_a?(String) || color.respond_to?(:name)
+          raise "Color must be a string or have a name"
+        end
+
+        product.images.destroy_all
+
+        failed = []
+        succeeded = []
+        copy_over = lambda do |is_thumbnail, mockup|
+          image            = Spree::Image.new
+          image.attachment = open mockup_url mockup
+          image.position   = is_thumbnail ? 0 : product.images.count
+          image.alt        = mockup.description
+          image.thumbnail  = mockup.description.downcase.include? 'thumb'
+          if image.respond_to?(:option_value_id=) && !is_thumbnail
+            image.option_value_id = mockup_option_value_id(mockup, product)
           end
 
-          unless okay_products.empty?
-            self.status = 'Published'
-            save
-          end
+          product.images << image
+          image.save
+          (image.valid? ? succeeded : failed) << image
+        end
+          .curry
 
-          unless error_products.empty? or ignore_errors
-            raise PublishError.new(error_products, okay_products), if error_products.count == associated_spree_products.count
-              "Failed to update all products associated with idea #{sku}"
-            else
-              "Failed to update #{error_products.count}/#{okay_products.count} products associated with idea #{sku}"
-            end
+        correct_color = lambda do |image|
+          if image.try(:color).respond_to?(:name)
+            image.color.name.downcase == color_str(color).downcase
+          else
+            return failed << image
           end
-        else
-          [] << build_product.tap do |product|
-            copy_images_to product
-            
-            if product.valid? && product.images.all?(&:valid?) or ignore_errors
-              product.available_on = Time.now
-              product.save
-              assign_sku_to product
+        end
 
-              self.status = 'Published'
-              save
-            else
-              raise PublishError.new([product], []), %{
-                Failed to create a product for idea #{sku}
-                #{product.errors.messages}
-              }
-            end
-          end
+        mockups.select(&correct_color).each(&copy_over[false])
+        thumbnails.select(&correct_color).each(&copy_over[true])
+        return succeeded, failed
+      end
+
+      def publisher
+        Publisher.where(idea_sku: sku).first
+      end
+
+      def publish
+        Publisher.new(idea_sku: sku).tap do |it|
+          it.instance_variable_set(:@idea, self)
         end
       end
 
-      private
       def assign_sku_to(product)
         if product.master
           product.master.tap do |master|
@@ -102,49 +132,24 @@ module Spree
         end
       end
 
-      def copy_images_to(product)
-        product.images.destroy_all
+      private
 
-        copy = ->(mockup, is_thumbnail) do
-          image = Spree::Image.new
-          image.attachment = open mockup_url mockup
-          image.position = is_thumbnail ? 0 : product.images.count
-          image.alt = mockup.description
+      def mockup_option_value_id(mockup, product)
+        Spree::OptionValue
+          .where(option_type_id: style_type.id)
+          .joins(:variants)
+          .where(spree_option_values_variants: { variant_id: product.variants.map(&:id) })
+          .where('lower(name) = ?', mockup.imprintable.common_name.downcase)
+          .first
+          .try(:id)
+      end
 
-          product.images << image
-          image.save
-        end
-
-        mockups.each    { |m| copy[m, false] }
-        thumbnails.each { |t| copy[t, true] }
+      def color_str(color)
+        color.is_a?(String) ? color : color.name
       end
 
       def mockup_url(mockup)
-        if Rails.env.test?
-          mockup.file_url
-        else
-          raise "What the hell should this be?"
-        end
-      end
-
-      def copy_to_product(product)
-        product.name = "#{working_name} #{product_type}"
-        product.description = description
-        product.price = base_price
-        product.meta_description = meta_description
-        product.meta_keywords = meta_keywords
-
-        product.shipping_category_id = 
-          (Spree::ShippingCategory.where(name: shipping_category).first or
-           Spree::ShippingCategory.create(name: shipping_category)
-          ).id
-
-        product.tax_category_id = 
-          (Spree::TaxCategory.where(name: tax_category).first or
-           Spree::TaxCategory.create(name: tax_category)
-          ).id
-
-        return product
+        mockup.file_url
       end
     end
   end

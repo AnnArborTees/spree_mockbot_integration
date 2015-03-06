@@ -8,7 +8,7 @@
     <%= render partial: 'spree/admin/shared/idea_search' %>
   </div>
   <div class="alpha six columns">
-    <%= link_to "Settings", spree.admin_mockbot_settings_url, class: 'button' %>
+    <%= link_to "Settings", spree.admin_api_settings_url, class: 'button' %>
   </div>
 </div>
 
@@ -21,8 +21,14 @@
 <% elsif @unauthorized_access %>
   <div class="row">
     <div class="alpha twelve columns error-text">
-      Remote authentication failed. Check the authorization email and token in the 
-      <%= link_to 'settings', spree.admin_mockbot_settings_url %>.
+      MockBot authentication failed. Check the authorization email and token in the 
+      <%= link_to 'settings', spree.admin_api_settings_url %>.
+    </div>
+  </div>
+<% elsif @other_error %>
+  <div class="row">
+    <div class="alpha twelve columns error-text">
+      Something went wrong: <%= @other_error.message %>
     </div>
   </div>
 <% elsif @ideas.any? %>
@@ -36,17 +42,23 @@
       <col style="width: 17%;">
     </colgroup>
     <thead>
-    <tr data-hook="admin_ideas_index_headers">
-      <th><%= Spree.t(:sku) %></th>
-      <th><%= Spree.t(:mockbot_status) %></th>
-      <th>Spree Matches</th>
-      <th data-hook="admin_ideas_index_header_actions" class="actions"></th>
-    </tr>
+      <tr data-hook="admin_ideas_index_headers">
+        <th><%= Spree.t(:sku) %></th>
+        <th><%= Spree.t(:mockbot_status) %></th>
+        <th>Spree Matches</th>
+        <th data-hook="admin_ideas_index_header_actions" class="actions"></th>
+      </tr>
     </thead>
     <tbody>
     <% @ideas.each do |idea| %>
         <tr data-hook="admin_ideas_index_rows" class="<%= cycle('odd', 'even') %>", id="row-for-<%= idea.sku %>">
-          <td class="align-center"><%= link_to idea.sku, mockbot_idea_remote_url(idea), target: '_blank' rescue 'Error retrieving sku' %></td>
+          <td class="align-center">
+            <% if mockbot_homepage? %>
+              <%= link_to idea.sku, mockbot_idea_remote_url(idea), target: '_blank' %>
+            <% else %>
+              <%= idea.sku %>
+            <% end %>
+          </td>
           <td class="align-center"><%= idea.status rescue 'Unknown status' %></td>
           <td><%= links_to_product_from_idea idea %></td>
           <td class="actions" data-hook="admin_ideas_index_row_actions">

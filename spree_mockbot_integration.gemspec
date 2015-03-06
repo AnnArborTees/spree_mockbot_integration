@@ -15,6 +15,8 @@ Gem::Specification.new do |s|
   s.requirements << 'none'
 
   s.add_dependency 'spree_core', '~> 2.2.0'
+  s.add_dependency 'spree_annarbortees_theme', '~> 2.2.0'
+  s.add_dependency 'spree_multi_domain'
   s.add_dependency 'activeresource-response'
   s.add_dependency 'activeresource'
   s.add_dependency 'figaro'
@@ -24,6 +26,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'database_cleaner'
   s.add_development_dependency 'factory_girl', '~> 4.2'
   s.add_development_dependency 'ffaker'
+  s.add_development_dependency 'shoulda-matchers', '~> 2.5'
   s.add_development_dependency 'rspec-rails',  '~> 3.0'
   s.add_development_dependency 'sass-rails'
   s.add_development_dependency 'selenium-webdriver'
