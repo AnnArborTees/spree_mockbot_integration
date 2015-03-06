@@ -3,6 +3,8 @@ source 'https://rubygems.org'
 branch = '2-2-stable'
 
 # Provides basic authentication functionality for testing parts of your engine
+gem 'sunspot_rails'
+gem 'sunspot_solr'
 gem 'spree_api', github: 'spree/spree', branch: branch
 gem 'spree_backend', github: 'spree/spree', branch: branch
 gem 'spree_core', github: 'spree/spree', branch: branch
