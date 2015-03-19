@@ -343,7 +343,7 @@ module Spree
         end
 
         def upcharge_for(size, imprintable)
-          imprintable = crm_imprintable(imprintable)
+          imprintable = crm_imprintable(imprintable) unless imprintable
 
           upcharge_field = if /(?<count>\d)XL/ =~ size.display_value.upcase
               "#{'x' * count.to_i}l_upcharge".to_sym
@@ -357,7 +357,8 @@ module Spree
         end
 
         def crm_imprintable(imprintable_id)
-          Spree::Crm::Imprintable.find(imprintable_id)
+          return Spree::Crm::Imprintable.find(imprintable_id) unless imprintable_id.class == Spree::Crm::Imprintable
+          return imprintable_id if imprintable_id.class == Spree::Crm::Imprintable
         end
 
         def color_of_product(idea, product)
