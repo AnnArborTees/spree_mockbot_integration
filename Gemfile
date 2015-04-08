@@ -14,7 +14,8 @@ gem 'spree_multi_domain', github: 'annarbortees/spree-multi-domain', branch: bra
 group :development, :test do
   gem 'webmock'
   gem 'endpoint_stub', github: 'Resonious/endpoint_stub', branch: 'develop'
-  gem 'byebug'
+  gem 'byebug', platforms: :mri
+  gem 'rubinius-debugger', platforms: :rbx
 end
 
 gemspec
