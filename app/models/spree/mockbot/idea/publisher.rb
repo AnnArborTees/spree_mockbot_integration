@@ -211,7 +211,7 @@ module Spree
               product.price = product.variants.joins(:prices).minimum(:amount)
 
               if product.save
-                product.log_update "Assigned product.layout 'imprinted_apparel' to  #{idea.sku}"
+                product.log_update "Assigned product.layout 'imprinted_apparel' to #{idea.sku}"
               else
                 raise_and_log product, "Failed to update the product's "\
                                        "layout."
@@ -220,16 +220,20 @@ module Spree
             end
 
             begin
-              idea.update_attributes status: 'Published'
-              idea.update_attributes are_mockups_changed: false
-              idea.update_attributes is_copy_changed: false
+              idea.update_attributes(
+                status: 'Published',
+                are_mockups_changed: false,
+                is_copy_changed: false,
+                product_permalinks: idea.associated_spree_products.map(&method(:product_link)).join(',')
+              )
 
             rescue ActiveResource::ServerError
               raise PublishError.new(idea),
                                   "Something went wrong on MockBot's end, and "\
                                   "the idea's status couldn't be set to "\
-                                  "'Published'. The products published "\
-                                  "successfully, however."
+                                  "'Published', and permalinks/flags could not "\
+                                  "be sent over. "\
+                                  "The products published  successfully, however."
             end
           end
         end
@@ -252,6 +256,13 @@ module Spree
         end
 
         protected
+
+        def product_link(product)
+          store = product.stores.first
+          url = store.domains.split(/\s/).first
+
+          "http://#{url}/products/#{product.slug}"
+        end
 
         def raise_if_already_done!
           raise PublishError.new(nil), 'Already done!' if current_step == 'done'

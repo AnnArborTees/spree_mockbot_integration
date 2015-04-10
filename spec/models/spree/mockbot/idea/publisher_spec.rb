@@ -364,7 +364,7 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
             end
           end
 
-          it 'should set the idea status to Published' do
+          it 'should set the idea status to Published', sad_face: true do
             publisher.generate_variants
 
             expect(idea.status).to eq 'Published'
