@@ -221,7 +221,7 @@ module Spree
 
             begin
               idea.update_attributes(
-                status: 'Published',
+                status: 'published',
                 are_mockups_changed: false,
                 is_copy_changed: false,
                 product_permalinks: idea.associated_spree_products.map(&method(:product_link)).join(',')
@@ -270,7 +270,8 @@ module Spree
 
 
         def raise_if_not_ready!
-          raise PublishError.new(nil), 'This idea is not ready to publish!' unless (idea.status.downcase == 'published' || idea.status.downcase == 'ready_to_publish')
+          raise PublishError.new(nil), 'This idea is not ready to publish!' unless (idea.status.downcase == 'published' || idea.status.downcase == 'ready_to_publish' ||
+              idea.status.downcase == 'queued_to_publish' || idea.status.downcase == 'failed_to_publish' )
         end
 
         def step(str, &block)
