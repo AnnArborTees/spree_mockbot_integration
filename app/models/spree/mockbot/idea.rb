@@ -132,6 +132,10 @@ module Spree
         end
       end
 
+      def self.ready_to_publish(page = 1)
+        self.find(:all, params: {ready_to_publish: true, page: page})
+      end
+
       private
 
 
