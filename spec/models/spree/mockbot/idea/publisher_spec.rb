@@ -119,7 +119,7 @@ describe Spree::Mockbot::Idea::Publisher, publish_spec: true do
 
           before :each do
             matching_product.master.sku = idea.sku
-            matching_product.slug = idea.product_slug 'Red'
+            matching_product.slug = idea.new_product_slug 'Red'
             matching_product.save
           end
 

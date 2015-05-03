@@ -10,17 +10,18 @@ module Spree
       self.collection_parser = ::ActiveResourcePagination::PaginatedCollection
 
       def associated_spree_products
-        Spree::Product
-          .where(spree_variants: {sku: self.sku})
-          .joins(:master)
-          .readonly(false)
+        self.product_permalinks.map{|x| Spree::Product.find_by(slug: x.spree_slug) }.compact
       end
 
       def product_of_color(color)
-        # associated_spree_products.where(slug: product_slug(color)).first
-        associated_spree_products
-          .with_option_value(color_type, color_str(color))
-          .first
+        self.product_permalinks.each do |p|
+          if color_str(color) == p.color_name
+            Rails.logger.debug "[publish-debug] Found product of color #{color_str(color)}"
+            return Spree::Product.find_by(slug: p.spree_slug)
+          end
+        end
+        Rails.logger.debug "[publish-debug] Failed to find product of color #{color_str(color)}"
+        return nil
       end
 
       def all_images
@@ -35,8 +36,13 @@ module Spree
         "#{product_name} #{product_type}"
       end
 
-      def product_slug(color)
-        "#{spree_product_name(color)}-#{color_str(color)}".parameterize
+      def new_product_slug(color)
+        slug = "#{spree_product_name(color)}-#{color_str(color)}".parameterize
+        if Spree::Product.where(slug: slug).exists?
+          slug = "#{slug}-1"
+          slug = slug.sub(/\d+\Z/) {|x| x.to_i + 1} while Spree::Product.where(slug: slug).exists?
+        end
+        slug
       end
 
       def assign_product_type_to(product, raise_on_fail = false)
@@ -45,7 +51,7 @@ module Spree
           prop = Spree::Property.create(name: 'product-type', presentation: 'Product Type')
         end
 
-        prod_prop = Spree::ProductProperty.new(product_id: product.id, property_id: prop.id, value: product_type)
+        prod_prop = Spree::ProductProperty.find_or_initialize_by(product_id: product.id, property_id: prop.id, value: product_type)
         prod_prop.send(raise_on_fail ? :save! : :save)
       end
 
@@ -56,7 +62,7 @@ module Spree
       def copy_to_product(product, color)
         product.name        = spree_product_name(color)
         product.description = description || ""
-        product.slug        = product_slug(color)
+        product.slug        = new_product_slug(color) if product.slug.blank?
         product.price       = base_price
         product.meta_description = meta_description
         product.meta_keywords    = meta_keywords
@@ -83,8 +89,9 @@ module Spree
         failed = []
         succeeded = []
         copy_over = lambda do |is_thumbnail, mockup|
+          next if mockup.is_a? TrueClass # TODO: Nigel, why would the mockup ever be True here
           image            = Spree::Image.new
-          image.attachment = open mockup_url mockup
+          image.attachment = open(mockup_url(mockup))
           image.position   = is_thumbnail ? 0 : product.images.count
           image.alt        = mockup.description
           image.thumbnail  = mockup.description.downcase.include? 'thumb'

@@ -18,7 +18,7 @@ module Spree
         self.table_name = 'spree_mockbot_publishers'
 
         def self.steps
-          %w(generate_products generate_variants import_images)
+          %w(generate_products generate_variants import_images mark_published)
         end
 
         def self.step_after(from)
@@ -73,7 +73,9 @@ module Spree
           raise_if(idea, idea.colors.empty?) { "Idea has no colors" }
 
           step :generate_products do
+            Rails.logger.debug "[publish-debug] Generating products for #{idea.sku}"
             idea.colors.each do |color|
+              Rails.logger.debug "[publish-debug] Generating product for #{idea.sku} in #{color}"
               product = idea.product_of_color(color) || Spree::Product.new
 
               raise_if(
@@ -102,6 +104,7 @@ module Spree
                     "slug in order to publish #{idea.sku}."
                 end
                 product.save!
+                idea.update_attributes( product_permalinks: [{ link: product.product_permalink, color_name: color.name}] )
                 idea.assign_product_type_to!(product) unless idea.product_type.nil?
               end
 
@@ -109,7 +112,6 @@ module Spree
                 "Failed to generate product for idea #{idea.sku}. "\
                 "Product errors: #{product.errors.full_messages}"
               end
-
               product.log_update "Copied info from MockBot idea #{idea.sku}"
             end
           end
@@ -118,6 +120,7 @@ module Spree
         def import_images
           step :import_images do
             return if !(idea.associated_spree_products.map{|product| product.images.empty?}.include? true) and !idea.are_mockups_changed?
+
             idea.associated_spree_products.each do |product|
               begin
                 color = color_of_product(idea, product)
@@ -219,22 +222,23 @@ module Spree
 
             end
 
-            begin
-              idea.update_attributes(
+          end
+        end
+
+        def mark_published
+
+          begin
+            idea.update_attributes(
                 status: 'published',
                 are_mockups_changed: false,
                 is_copy_changed: false,
-                product_permalinks: idea.associated_spree_products.map(&method(:product_link)).join(',')
-              )
-
-            rescue ActiveResource::ServerError
-              raise PublishError.new(idea),
-                                  "Something went wrong on MockBot's end, and "\
+            )
+          rescue ActiveResource::ServerError
+            raise PublishError.new(idea),
+                  "Something went wrong on MockBot's end, and "\
                                   "the idea's status couldn't be set to "\
-                                  "'Published', and permalinks/flags could not "\
-                                  "be sent over. "\
+                                  "'Published' "\
                                   "The products published  successfully, however."
-            end
           end
         end
 
@@ -374,7 +378,8 @@ module Spree
         end
 
         def color_of_product(idea, product)
-          idea.colors.find { |c| idea.product_slug(c) == product.slug }
+          product_permalink = idea.product_permalinks.find { |p_p| p_p.spree_slug == product.slug }
+          idea.colors.find { |c| c.name == product_permalink.color_name }
         end
 
         def raise_if(object, condition, log = false, &block)

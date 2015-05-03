@@ -7,6 +7,10 @@ Spree::Product.class_eval do
     info
   end
 
+  def product_permalink
+    "http://#{stores.first.domains.split(' ').first}/products/#{slug}" rescue nil
+  end
+
   alias_method :original_destroy, :destroy
   def destroy
     update_attributes slug: "deleted-#{slug}"
