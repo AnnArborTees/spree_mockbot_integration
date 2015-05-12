@@ -94,7 +94,7 @@ module Spree
           image.attachment = open(mockup_url(mockup))
           image.position   = is_thumbnail ? 0 : product.images.count
           image.alt        = mockup.description
-          image.thumbnail  = mockup.description.downcase.include? 'thumb'
+          image.thumbnail  = mockup.description.downcase.include? 'thumb' rescue image.thumbnail = false
           if image.respond_to?(:option_value_id=) && !is_thumbnail
             image.option_value_id = mockup_option_value_id(mockup, product)
           end
@@ -107,7 +107,11 @@ module Spree
 
         correct_color = lambda do |image|
           if image.try(:color).respond_to?(:name)
-            image.color.name.downcase == color_str(color).downcase
+            begin
+              image.color.name.downcase == color_str(color).downcase
+            rescue
+              return failed << image
+            end
           else
             return failed << image
           end
@@ -152,7 +156,7 @@ module Spree
           .where(option_type_id: style_type.id)
           .joins(:variants)
           .where(spree_option_values_variants: { variant_id: product.variants.map(&:id) })
-          .where('lower(name) = ?', imprintable.common_name.downcase)
+          .where('name = ?', imprintable.common_name)
           .first
           .try(:id)
       end

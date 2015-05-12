@@ -144,7 +144,7 @@ module Spree
                 product.log_update "Grabbed image data from MockBot idea #{idea.sku}"
               rescue StandardError => e
                 raise e if e.is_a? PublishError
-                raise_and_log product, "Uncaught #{e.class.name}: #{e.message}"
+                raise_and_log product, "Uncaught #{e.class.name}: #{e.message} \n #{e.backtrace}"
               end
             end
           end
