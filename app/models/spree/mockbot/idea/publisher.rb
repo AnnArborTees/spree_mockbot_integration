@@ -119,7 +119,7 @@ module Spree
 
         def import_images
           step :import_images do
-            return if !(idea.associated_spree_products.map{|product| product.images.empty?}.include? true) and !idea.are_mockups_changed?
+            return if !(idea.associated_spree_products.any? {|product| product.images.empty?}) and !idea.are_mockups_changed?
 
             idea.associated_spree_products.each do |product|
               begin
@@ -154,6 +154,7 @@ module Spree
           step :generate_variants do
             idea.associated_spree_products.each do |product|
               product_color = color_of_product(idea, product)
+              color_of_product_returned_nil_error!(idea, product) if product_color.nil?
 
               product.master.sku = idea.sku
 
@@ -302,9 +303,14 @@ module Spree
 
         def add_variant(idea, product, imprintable, imprintable_variant)
           product_color = color_of_product(idea, product)
+          color_of_product_returned_nil_error!(idea, product) if product_color.nil?
           color_value   = option_value(color_type, product_color.name)
 
           size = imprintable_variant.size
+
+          raise_if(product, size.nil?, true) do
+            "This imprintable variant: #{imprintable_variant.inspect} has a nil size!"
+          end
 
           sku = SpreeMockbotIntegration::Sku.build(
             0, idea,
@@ -394,6 +400,22 @@ module Spree
                               "#{current_step.humanize.downcase}: #{message}"
           end
           raise PublishError.new(object), message
+        end
+
+        def color_of_product_returned_nil_error!(idea, product)
+          raise_if(product, true, true) do
+            idea_permalinks = idea
+              .product_permalinks
+              .map { |p| "product: #{p.spree_slug}, color: #{p.color_name}" }
+              .join(' | ')
+
+            idea_colors = idea.colors.map(&:name).join(' | ')
+
+            "Could not determine the color of product #{product.slug}.\n"\
+            "Idea permalinks: #{idea_permalinks}. \n"\
+            "Idea colors: #{idea_colors}. \n"\
+            "No colors matched."
+          end
         end
 
         def raise_and_log(product, message)

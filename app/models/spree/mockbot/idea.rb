@@ -90,6 +90,8 @@ module Spree
         succeeded = []
         copy_over = lambda do |is_thumbnail, mockup|
           next if mockup.is_a? TrueClass # TODO: Nigel, why would the mockup ever be True here
+                                         # ... I honestly don't know. I can only assume I had a
+                                         # reason for that line.
           image            = Spree::Image.new
           image.attachment = open(mockup_url(mockup))
           image.position   = is_thumbnail ? 0 : product.images.count
@@ -110,10 +112,12 @@ module Spree
             begin
               image.color.name.downcase == color_str(color).downcase
             rescue
-              return failed << image
+              failed << image
+              next
             end
           else
-            return failed << image
+            failed << image
+            next
           end
         end
 
