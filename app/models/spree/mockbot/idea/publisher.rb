@@ -144,7 +144,13 @@ module Spree
                 product.log_update "Grabbed image data from MockBot idea #{idea.sku}"
               rescue StandardError => e
                 raise e if e.is_a? PublishError
-                raise_and_log product, "Uncaught #{e.class.name}: #{e.message} \n #{e.backtrace}"
+
+                if e.messages.include?("on an instance of Net::ReadAdapter")
+                  raise_and_log product, "Network error. Please try again later."
+                else
+                  raise_and_log product, "Uncaught #{e.class.name}: #{e.message} \n #{e.backtrace}"
+                end
+
               end
             end
           end
@@ -154,7 +160,7 @@ module Spree
           step :generate_variants do
             idea.associated_spree_products.each do |product|
               product_color = color_of_product(idea, product)
-              color_of_product_returned_nil_error!(idea, product) if product_color.nil?
+              color_of_product_returned_nil_error!(idea, product) and next if product_color.nil?
 
               product.master.sku = idea.sku
 
@@ -303,7 +309,7 @@ module Spree
 
         def add_variant(idea, product, imprintable, imprintable_variant)
           product_color = color_of_product(idea, product)
-          color_of_product_returned_nil_error!(idea, product) if product_color.nil?
+          color_of_product_returned_nil_error!(idea, product) and next if product_color.nil?
           color_value   = option_value(color_type, product_color.name)
 
           size = imprintable_variant.size
@@ -403,19 +409,25 @@ module Spree
         end
 
         def color_of_product_returned_nil_error!(idea, product)
-          raise_if(product, true, true) do
-            idea_permalinks = idea
-              .product_permalinks
-              .map { |p| "product: #{p.spree_slug}, color: #{p.color_name}" }
-              .join(' | ')
+          # NOTE keeping old analysis of error here. Feel free to remove if you don't want it.
+          #
+          # raise_if(product, true, true) do
+            # idea_permalinks = idea
+              # .product_permalinks
+              # .map { |p| "product slug: `#{p.spree_slug}` ~ color: `#{p.color_name}`" }
+              # .join(', ')
 
-            idea_colors = idea.colors.map(&:name).join(' | ')
+            # idea_colors = idea.colors.map { |c| "`#{c.name}`" }.join(' | ')
 
-            "Could not determine the color of product #{product.slug}.\n"\
-            "Idea permalinks: #{idea_permalinks}. \n"\
-            "Idea colors: #{idea_colors}. \n"\
-            "No colors matched."
-          end
+            # "Could not determine the color of product #{product.slug}.\n"\
+            # "Idea permalinks: #{idea_permalinks}. \n"\
+            # "Idea colors: #{idea_colors}. \n"\
+            # "No colors matched."
+          # end
+
+          idea.product_permalinks.delete_if { |p| p.spree_slug == product.slug }
+          idea.save!
+          product.destroy
         end
 
         def raise_and_log(product, message)
