@@ -145,7 +145,7 @@ module Spree
               rescue StandardError => e
                 raise e if e.is_a? PublishError
 
-                if e.messages.include?("on an instance of Net::ReadAdapter")
+                if e.message.include?("on an instance of Net::ReadAdapter")
                   raise_and_log product, "Network error. Please try again later."
                 else
                   raise_and_log product, "Uncaught #{e.class.name}: #{e.message} \n #{e.backtrace}"
